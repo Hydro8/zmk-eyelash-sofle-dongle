@@ -10,7 +10,12 @@ manifest:
       url-base: https://github.com/tokyo2006
     - name: englmaxi
       url-base: https://github.com/englmaxi
+    - name: keebs34
+      url-base: https://github.com/keebs34
   projects:
+    - name: zmk-config-selenium
+      remote: keebs34
+      revision: main
     - name: mario-peripheral-animation
       remote: gpeye
       revision: main
