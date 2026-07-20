@@ -1,8 +1,8 @@
 // Options from settings.h can be enabled here
 // See https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
 #define KB_LAYOUT_ERGOL
-#define VIM_NAVIGATION
-#define HRM_SHIFT
+#define MACOS
+#define HT_HOME_ROW_MODS
 
 #define SELENIUM_KEYMAP_BINDINGS(LOUT1,  LROW1,  RROW1,  ROUT1, \
                                  LOUT2,  LROW2,  RROW2,  ROUT2, \
