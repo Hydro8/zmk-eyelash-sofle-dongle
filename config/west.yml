@@ -9,7 +9,7 @@ manifest:
     - name: tokyo2006
       url-base: https://github.com/tokyo2006
     - name: englmaxi
-      url-base: https://github.com/englmaxi
+      url-base: https://github.com/Hydro8
     - name: keebs34
       url-base: https://github.com/keebs34
   projects:
