@@ -43,6 +43,6 @@ manifest:
       revision: micro_spi2
     - name: zmk-dongle-display
       remote: hydro8
-      revision: v0.3
+      revision: main
   self:
     path: config
