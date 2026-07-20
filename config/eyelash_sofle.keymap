@@ -14,7 +14,7 @@
     &kp ESC &kp N1 &kp N2 &kp N3 &kp N4 &kp N5  &kp UP_ARROW &kp N6 &kp N7 &kp N8 &kp N9 &kp N0 &kp BACKSPACE \
     LOUT1   LROW1                               &kp DOWN_ARROW                           RROW1  ROUT1         \
     LOUT2   LROW2                               &kp LEFT_ARROW                           RROW2  ROUT2         \
-    LOUT3   LROW3                               &kp LEFT_ARROW                           RROW3  ROUT3         \
-    &kp LEFT  &kp RIGHT  LT1  LT2  LT3                  RT3  RT2  RT1  &kp UP &kp DOWN
+    LOUT3   LROW3                               &kp RIGHT_ARROW                           RROW3  ROUT3         \
+    &kp LEFT  &kp RIGHT  &none LT1  LT2  LT3          &none &none        RT3  RT2  RT1  &kp UP &kp DOWN
 
 #include <selenium/selenium.keymap>
