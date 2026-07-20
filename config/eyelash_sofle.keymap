@@ -3,6 +3,9 @@
 #define KB_LAYOUT_ERGOL
 #define MACOS
 #define HT_HOME_ROW_MODS
+#define HRM_SHIFT
+
+#define SHORT_TAPPING_TERM 200
 
 #define SELENIUM_KEYMAP_BINDINGS(LOUT1,  LROW1,  RROW1,  ROUT1, \
                                  LOUT2,  LROW2,  RROW2,  ROUT2, \
