@@ -8,7 +8,7 @@ manifest:
       url-base: https://github.com/GPeye
     - name: tokyo2006
       url-base: https://github.com/tokyo2006
-    - name: englmaxi
+    - name: hydro8
       url-base: https://github.com/Hydro8
     - name: keebs34
       url-base: https://github.com/keebs34
@@ -42,7 +42,7 @@ manifest:
       remote: tokyo2006
       revision: micro_spi2
     - name: zmk-dongle-display
-      remote: englmaxi
+      remote: hydro8
       revision: v0.3
   self:
     path: config
