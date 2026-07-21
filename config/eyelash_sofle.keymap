@@ -18,3 +18,16 @@
     &kp RIGHT  &none &none LT1  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
 
 #include <selenium/selenium.keymap>
+
+
+// Calque partiel pour Photoshop (Calque 4)
+layer_4 {
+    bindings = <
+        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+        &kp W &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+    >;
+    display-name = "Autocad";
+};
