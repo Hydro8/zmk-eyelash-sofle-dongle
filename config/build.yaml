@@ -1,4 +1,3 @@
-# This file generates the GitHub Actions matrix.
 include:
   - board: nice_nano
     board_revision: 2
