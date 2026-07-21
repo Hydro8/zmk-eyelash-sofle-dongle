@@ -20,14 +20,19 @@
 #include <selenium/selenium.keymap>
 
 
-// Calque partiel pour Photoshop (Calque 4)
-layer_4 {
-    bindings = <
-        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-        &kp W &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-        &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-    >;
-    display-name = "Autocad";
+/ {
+    keymap {
+        // Calque partiel pour Photoshop (Calque 8)
+        // 5 rangées de 12 pour correspondre à la matrice du Sofle
+        app_layer_8: app_layer_8 {
+            bindings = <
+                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+            >;
+            display-name = "AUTOCAD";
+        };
+    };
 };
