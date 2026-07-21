@@ -36,5 +36,3 @@
         };
     };
 };
-
-ZMK_LAYER_MONITOR(listener, 1);
