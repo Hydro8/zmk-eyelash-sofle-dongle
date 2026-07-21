@@ -12,6 +12,8 @@ manifest:
       url-base: https://github.com/Hydro8
     - name: keebs34
       url-base: https://github.com/keebs34
+    - name: pfilipp
+      url-base: https://github.com/pfilipp
   projects:
     - name: zmk-config-selenium
       remote: keebs34
@@ -38,7 +40,8 @@ manifest:
     - name: zmk-dongle-display
       remote: hydro8
       revision: main
-  self:
-    path: config
+    - name: zmk-layer
+      remote: pfilipp
+      revision: main
   self:
     path: config
