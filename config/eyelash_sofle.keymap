@@ -27,7 +27,7 @@
         app_layer_8: app_layer_8 {
             bindings = <
                 &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &trans &trans &trans &trans &trans &kp O    &trans &trans &trans &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
                 &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
