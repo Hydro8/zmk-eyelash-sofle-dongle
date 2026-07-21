@@ -37,7 +37,7 @@ manifest:
       revision: main
     - name: zmk-dongle-display
       remote: hydro8
-      revision: main
+      revision: custom-v0.3
   self:
     path: config
   self:
