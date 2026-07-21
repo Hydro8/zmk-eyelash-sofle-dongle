@@ -20,15 +20,15 @@ manifest:
       remote: gpeye
       revision: main
     - name: zmk
-      remote: cormoran
-      revision: v0.3-branch+dya
+      remote: zmkfirmware
+      revision: main
       import: app/west.yml
     - name: zmk-behavior-runtime-sensor-rotate
       remote: cormoran
       revision: main
     - name: zmk-module-ble-management
       remote: cormoran
-      revision: zmk-v0.3.0.0
+      revision: main
     - name: zmk-module-battery-history
       remote: cormoran
       revision: main
@@ -37,12 +37,14 @@ manifest:
       revision: main
     - name: zmk-module-runtime-input-processor
       remote: cormoran
-      revision: zmk-v0.3.0.0
+      revision: main
     - name: prospector-zmk-module
       remote: tokyo2006
       revision: micro_spi2
     - name: zmk-dongle-display
       remote: hydro8
-      revision: custom-v0.3
+      revision: main
+  self:
+    path: config
   self:
     path: config
