@@ -7,4 +7,31 @@ on:
 
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
+    runs-on: ubuntu-latest
+    container: zmkfirmware/zmk-build-arm:stable
+    strategy:
+      matrix:
+        include:
+          - board: nice_nano
+            board_revision: 2
+            shield: eyelash_sofle_central_dongle dongle_display
+          - board: nice_nano
+            board_revision: 2
+            shield: eyelash_sofle_peripheral_left
+          - board: nice_nano
+            board_revision: 2
+            shield: eyelash_sofle_peripheral_right
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Init West
+        run: west init -l config
+      - name: Update West
+        run: west update
+      - name: Build Firmware
+        run: west build -s zmk/app -b ${{ matrix.board }}@${{ matrix.board_revision }} -- -DZMK_CONFIG=config -DSHIELD="${{ matrix.shield }}"
+      - name: Upload UF2
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.shield }}-firmware
+          path: build/zephyr/zmk.uf2
