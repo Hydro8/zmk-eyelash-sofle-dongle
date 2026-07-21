@@ -1,0 +1,16 @@
+# This file generates the GitHub Actions matrix.
+# For more information, see:
+# https://zmk.dev/docs/user-setup#github-actions
+
+include:
+  - board: nice_nano
+    board_revision: 2
+    shield: eyelash_sofle_central_dongle dongle_display
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_STUDIO_LOCKING=n
+  - board: nice_nano
+    board_revision: 2
+    shield: eyelash_sofle_peripheral_left nice_view
+  - board: nice_nano
+    board_revision: 2
+    shield: eyelash_sofle_peripheral_right nice_view
