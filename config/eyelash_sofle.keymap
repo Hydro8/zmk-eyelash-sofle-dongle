@@ -21,6 +21,12 @@
 
 
 / {
+    app_layer_config: app_layer_config {
+        compatible = "app,layer-config";
+        // Met ici les numéros des calques qui doivent s'activer tout seuls (ex: 9 pour Calculatrice)
+        auto-layers = <10>;
+    };
+   
     keymap {
         // Calque partiel pour Autocad (Calque 7)
         app_layer_7: app_layer_7 {
@@ -62,9 +68,9 @@
         app_layer_10: app_layer_10 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
-                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
-                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
-                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N7 &kp N8 &kp N9 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N4 &kp N5 &kp N6 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N2 &kp N3 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
             >;
             display-name = "Calc";
