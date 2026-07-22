@@ -23,16 +23,28 @@
 / {
     keymap {
         // Calque partiel pour Autocad (Calque 7)
-        // 5 rangées de 12 pour correspondre à la matrice du Sofle
         app_layer_7: app_layer_7 {
             bindings = <
-                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-                &trans &trans &trans &trans &trans &kp O    &trans &trans &trans &trans &trans &trans
-                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
-                &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans
+                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
+                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
+                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
+                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
+                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
             >;
             display-name = "Autocad";
         };
+
+        // Calque partiel pour Word (Calque 8)
+        app_layer_8: app_layer_8 {
+            bindings = <
+                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+            >;
+            display-name = "Word";
+        };
     };
 };
+
