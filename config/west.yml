@@ -10,8 +10,6 @@ manifest:
       url-base: https://github.com/Hydro8
     - name: keebs34
       url-base: https://github.com/keebs34
-    - name: maatthc
-      url-base: https://github.com/maatthc
   projects:
     - name: zmk-config-selenium
       remote: keebs34
@@ -37,9 +35,6 @@ manifest:
       revision: main
     - name: zmk-dongle-display
       remote: hydro8
-      revision: main
-    - name: zmk-feature-appcompanion
-      remote: maatthc
       revision: main
   self:
     path: config

@@ -45,6 +45,30 @@
             >;
             display-name = "Word";
         };
+
+                // Calque partiel pour Excel (Calque 9)
+        app_layer_9: app_layer_9 {
+            bindings = <
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+            >;
+            display-name = "Excel";
+        };
+
+                // Calque partiel pour Calculator (Calque 10)
+        app_layer_10: app_layer_10 {
+            bindings = <
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+            >;
+            display-name = "Calc";
+        };
     };
 };
 
