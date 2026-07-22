@@ -15,7 +15,7 @@
     LOUT1   LROW1                               &kp DOWN_ARROW                           RROW1  ROUT1         \
     LOUT2   LROW2                               &kp LEFT_ARROW                           RROW2  ROUT2         \
     LOUT3   LROW3                               &kp RIGHT_ARROW                           RROW3  ROUT3         \
-    &kp RIGHT  &none &app_layer LT1  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
+    &kp RIGHT  &none &app_layer &app_layer  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
 
 #include <selenium/selenium.keymap>
 
