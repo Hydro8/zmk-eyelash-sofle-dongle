@@ -25,11 +25,11 @@
         // Calque partiel pour Autocad (Calque 7)
         app_layer_7: app_layer_7 {
             bindings = <
-                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
-                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
-                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
-                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
-                &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0    &kp 0 &kp 0 &kp 0 &kp 0 &kp 0 &kp 0
+                &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
+                &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
+                &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
+                &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
+                &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
             >;
             display-name = "Autocad";
         };
@@ -37,11 +37,11 @@
         // Calque partiel pour Word (Calque 8)
         app_layer_8: app_layer_8 {
             bindings = <
-                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
-                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
-                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
-                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
-                &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1    &kp 1 &kp 1 &kp 1 &kp 1 &kp 1 &kp 1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
+                &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
             >;
             display-name = "Word";
         };
