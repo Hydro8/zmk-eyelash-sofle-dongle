@@ -2,7 +2,7 @@ include:
   - board: nice_nano@2
     shield: settings_reset
   - board: nice_nano@2
-    shield: eyelash_sofle_central_dongle dongle_display
+    shield: eyelash_sofle_central_dongle dongle_display raw_hid_adapter
   - board: nice_nano@2
     shield: eyelash_sofle_peripheral_left
   - board: nice_nano@2

@@ -10,6 +10,8 @@ manifest:
       url-base: https://github.com/Hydro8
     - name: keebs34
       url-base: https://github.com/keebs34
+    - name: zzeneg
+      url-base: https://github.com/zzeneg
   projects:
     - name: zmk-config-selenium
       remote: keebs34
@@ -35,6 +37,9 @@ manifest:
       revision: main
     - name: zmk-dongle-display
       remote: hydro8
+      revision: main
+    - name: zmk-raw-hid
+      remote: zzeneg
       revision: main
   self:
     path: config
