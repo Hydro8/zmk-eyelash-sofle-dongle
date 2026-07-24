@@ -1,34 +1,85 @@
-// Options from settings.h can be enabled here
-// See https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
-#define KB_LAYOUT_ERGOL
-#define MACOS
-#define HT_HOME_ROW_MODS
-#define HRM_SHIFT
-#define PINKY_MOD_HOLD
-#define SHORT_TAPPING_TERM 250
+// =============================================================================
+// SELENIUM KEYMAP - Configuration principale
+// =============================================================================
+//
+// Options de layout clavier depuis le module zmk-config-selenium.
+// Voir https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
+//
+#define KB_LAYOUT_ERGOL      // Layout ergonomique (Sofle/Corne style, colonnes staggered)
+#define MACOS                 // Raccourcis clavier macOS (Cmd au lieu de Ctrl)
+#define HT_HOME_ROW_MODS     // Home-row mods : touches lettres deviennent modificateurs si maintenues
+#define HRM_SHIFT             // Shift est géré par home-row mods sur les touches E/R
+#define PINKY_MOD_HOLD        // Auriculaire : les mods sur auriculaires nécessitent un maintien
+#define SHORT_TAPPING_TERM 250 // Délai court (250ms) pour distinguer tap vs hold
 
+// =============================================================================
+// MACRO DE LAYOUT PRINCIPAL (Base Layer)
+// =============================================================================
+//
+// Ce macro définit les 6 rangées du clavier (3 gauches + 3 droites).
+// Les paramètres LOUT/LROW/RROW/ROUT sont injectés par selenium.keymap
+// et contiennent les bindings pour chaque position du clavier.
+//
+// Les LT1/LT2/LT3/RT3/RT2/RT1 sont les touches du thumb cluster (pouces).
+//
+// NOTE : La 3ème rangée (pouces) contient les calques temporaires et
+//         le toggle du calque d'application (&app_layer).
+//
 #define SELENIUM_KEYMAP_BINDINGS(LOUT1,  LROW1,  RROW1,  ROUT1, \
                                  LOUT2,  LROW2,  RROW2,  ROUT2, \
-                                 LOUT3,  LROW3,  RROW3,  ROUT3, \
                                  LT1, LT2, LT3,  RT3, RT2, RT1) \
     &kp ESC &kp N1 &kp N2 &kp N3 &kp N4 &kp N5  &kp UP_ARROW &kp N6 &kp N7 &kp N8 &kp N9 &kp N0 &kp BACKSPACE \
     LOUT1   LROW1                               &kp DOWN_ARROW                           RROW1  ROUT1         \
     LOUT2   LROW2                               &kp LEFT_ARROW                           RROW2  ROUT2         \
     LOUT3   LROW3                               &kp RIGHT_ARROW                           RROW3  ROUT3         \
-    &kp RIGHT  &none &kp F13  LT1  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
+    &kp RIGHT  &none &app_layer  LT1  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
 
+// Inclusion des bindings générés par selenium.keymap
+// (home-row mods, layer-taps, combos, etc.)
 #include <selenium/selenium.keymap>
 
-
 / {
+    // =============================================================================
+    // CONFIGURATION DES CALQUES D'APPLICATION
+    // =============================================================================
+    //
+    // Ce nœud est lu par Selenite (Mac) pour :
+    //   1. Connaître les noms des calques (pour l'overlay)
+    //   2. Saver quels calques s'activent en mode Auto (auto-layers)
+    //
     app_layer_config: app_layer_config {
         compatible = "app,layer-config";
-        // Met ici les numéros des calques qui doivent s'activer tout seuls (ex: 9 pour Calculatrice)
+
+        // Liste des calques qui s'activent TOUT SEULS quand l'app est focusée.
+        // Mode Auto : le calque est activé immédiatement sans appuyer sur &app_layer.
+        // Les calques NON listés ici sont en mode Manuel :
+        //   → Le calque est stocké en mémoire, l'utilisateur active via &app_layer.
+        //
+        // Exemple : <10> = seul le calque 10 (Calculatrice) est en auto-activation.
+        //            Les calques 7 (Autocad), 8 (Word), 9 (Excel) sont en mode Manuel.
         auto-layers = <10>;
     };
-   
+
     keymap {
-        // Calque partiel pour Autocad (Calque 7)
+        // =====================================================================
+        // CALQUES D'APPLICATION (overlays partiels)
+        // =====================================================================
+        //
+        // Ces calques se SUPERPOSENT au calque de base.
+        // Seules les touches définies ici remplacent celles de la base.
+        // Les touches &kp N0 sont des placeholders (elles envoient "0" et sont
+        // à remplacer par les vrais bindings de chaque application).
+        //
+        // "display-name" est le nom affiché dans Selenite (Mac) pour l'overlay
+        // et dans la barre de menus.
+        //
+        // &app_layer (sur la rangée des pouces) permet de basculer ces calques :
+        //   1 appui  = activer le calque de l'app courante
+        //   2 appuis = désactiver (retour à la base)
+        //
+
+        // Calque 7 : Autocad
+        // Raccourcis spécifiques à Autodesk Autocad
         app_layer_7: app_layer_7 {
             bindings = <
                 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
@@ -40,7 +91,8 @@
             display-name = "Autocad";
         };
 
-        // Calque partiel pour Word (Calque 8)
+        // Calque 8 : Word
+        // Raccourcis spécifiques à Microsoft Word
         app_layer_8: app_layer_8 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
@@ -52,7 +104,8 @@
             display-name = "Word";
         };
 
-                // Calque partiel pour Excel (Calque 9)
+        // Calque 9 : Excel
+        // Raccourcis spécifiques à Microsoft Excel
         app_layer_9: app_layer_9 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
@@ -64,7 +117,10 @@
             display-name = "Excel";
         };
 
-                // Calque partiel pour Calculator (Calque 10)
+        // Calque 10 : Calculatrice (mode Auto)
+        // Ce calque est dans auto-layers, il s'active TOUT SEUL au focus de l'app.
+        // Pas besoin d'appuyer sur &app_layer.
+        // Pavé numérique en layout téléphone : 7-8-9 / 4-5-6 / -2-3
         app_layer_10: app_layer_10 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
@@ -77,4 +133,3 @@
         };
     };
 };
-
