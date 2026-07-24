@@ -8,6 +8,7 @@
 / {
     app_layer: behavior_app_layer {
         compatible = "zmk,behavior-app-layer";
+        #binding-cells = <0>;
     };
 };
 
