@@ -1,100 +1,135 @@
 # =============================================================================
-# WEST MANIFEST — Dépendances du firmware
+# WEST MANIFEST — Firmware Dependencies
 # =============================================================================
 #
-# Ce fichier liste tous les modules externes nécessaires au firmware.
-# West (l'outil de build Zephyr) les clone et les place dans le bon dossier
-# avant la compilation.
+# This file lists all external modules required by the firmware.
+# West (Zephyr's build tool) clones them and places them in the correct
+# directory before compilation begins.
 #
-# Chaque module est identifié par :
-#   - name    : nom du dossier créé dans /modules/ (ex: zmk-raw-hid)
-#   - remote  : référence vers un des "remotes" défini ci-dessus
-#   - revision : branche ou tag git à utiliser
+# Each module is identified by:
+#   - name     : folder name created under /modules/ (e.g. zmk-raw-hid)
+#   - remote   : reference to one of the "remotes" defined below
+#   - revision : git branch or tag to checkout
 #
-# ⚠️ Ordre des projets : west les clone séquentiellement.
-#    "zmk" avec "import: app/west.yml" doit être après les modules persos
-#    pour que le CMake de ZMK puisse les trouver dans ZMK_EXTRA_MODULES.
+# IMPORTANT: "zmk" with "import: app/west.yml" must come AFTER the custom
+# modules so that CMake can find them when processing ZMK_EXTRA_MODULES.
 #
 
 manifest:
   # ==========================================================================
-  # REMOTES (sources git)
+  # REMOTES (git sources)
   # ==========================================================================
   remotes:
-    - name: zmkfirmware         # ZMK firmware officiel
+    # Official ZMK firmware
+    - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: cormoran            # Modules de cormoran (ble-management, battery-history, etc.)
+
+    # Modules by cormoran (BLE management, battery history, input processor, sensor rotate)
+    - name: cormoran
       url-base: https://github.com/cormoran
-    - name: gpeye               # Animation des LEDs sur les périphériques
+
+    # LED animation on peripherals
+    - name: gpeye
       url-base: https://github.com/GPeye
-    - name: hydro8              # Affichage OLED sur le dongle
+
+    # OLED display widgets for the dongle
+    - name: hydro8
       url-base: https://github.com/Hydro8
-    - name: keebs34             # zmk-config-selenium (home-row mods, combos, keymap générique)
+
+    # Generic keymap configuration (home-row mods, combos, layout templates)
+    - name: keebs34
       url-base: https://github.com/keebs34
-    - name: zzeneg              # Communication Raw HID bidirectionnelle
+
+    # Bidirectional Raw HID communication (32-byte reports)
+    - name: zzeneg
       url-base: https://github.com/zzeneg
 
   # ==========================================================================
-  # PROJETS (modules)
+  # PROJECTS (modules)
   # ==========================================================================
   projects:
-    # --- Configuration du keymap (home-row mods, combos, layouts) ---
+    # -------------------------------------------------------------------------
+    # Keymap configuration module (home-row mods, combos, generic layouts)
+    # Provides: #include <selenium/selenium.keymap> and layout macros
+    # -------------------------------------------------------------------------
     - name: zmk-config-selenium
       remote: keebs34
       revision: main
 
-    # --- Animation des LEDs sur les périphériques (moitiés du clavier) ---
+    # -------------------------------------------------------------------------
+    # Peripheral LED animation (Mario-style animation on the halves)
+    # -------------------------------------------------------------------------
     - name: mario-peripheral-animation
       remote: gpeye
       revision: main
 
-    # --- ZMK Firmware principal ---
-    # import: app/west.yml charge les sous-modules de ZMK (drivers, behaviors, etc.)
-    # Doit être APRÈS les modules persos pour que CMake les trouve.
+    # -------------------------------------------------------------------------
+    # ZMK Firmware (core)
+    # import: app/west.yml loads all ZMK sub-modules (drivers, behaviors, etc.)
+    # Must be AFTER custom modules so CMake can find them via ZMK_EXTRA_MODULES.
+    # -------------------------------------------------------------------------
     - name: zmk
       remote: zmkfirmware
       revision: main
       import: app/west.yml
 
-    # --- Rotation du capteur de pointage à chaud (via ZMK Studio BLE) ---
+    # -------------------------------------------------------------------------
+    # Runtime pointing sensor rotation (via ZMK Studio BLE commands)
+    # Allows rotating the trackball/trackpoint orientation on the fly.
+    # -------------------------------------------------------------------------
     - name: zmk-behavior-runtime-sensor-rotate
       remote: cormoran
       revision: main
 
-    # --- Gestion BLE à distance (appairage/suppression via ZMK Studio) ---
+    # -------------------------------------------------------------------------
+    # BLE device management (pairing/unpairing via ZMK Studio)
+    # Allows managing BLE bonds remotely without physical buttons.
+    # -------------------------------------------------------------------------
     - name: zmk-module-ble-management
       remote: cormoran
       revision: main
 
-    # --- Historique de batterie (pour ZMK Studio) ---
+    # -------------------------------------------------------------------------
+    # Battery level history tracking (displayed in ZMK Studio)
+    # Records battery percentage over time for monitoring battery health.
+    # -------------------------------------------------------------------------
     - name: zmk-module-battery-history
       remote: cormoran
       revision: main
 
-    # --- Input processor runtime (pour ZMK Studio) ---
+    # -------------------------------------------------------------------------
+    # Runtime input processor (configure key processing via ZMK Studio)
+    # Allows modifying how keypresses are processed without reflashing.
+    # -------------------------------------------------------------------------
     - name: zmk-module-runtime-input-processor
       remote: cormoran
       revision: main
 
-    # --- Affichage OLED sur le dongle (calque, mods, batterie) ---
-    # Contient aussi app_layer_sync.c et behavior_app_layer.c (module Selenite)
+    # -------------------------------------------------------------------------
+    # Dongle OLED display (layer name, modifiers, battery, WPM, bongo cat)
+    # Contains: custom_status_screen.c, widget_*.c files
+    # Also contains: app_layer_sync.c and behavior_app_layer.c (Selenite module)
+    # -------------------------------------------------------------------------
     - name: zmk-dongle-display
       remote: hydro8
       revision: main
 
-    # --- Communication Raw HID (rapports 32 octets bidirectionnels) ---
-    # Utilisé par app_layer_sync.c pour :
-    #   - Recevoir les commandes du Mac (calque cible, mode auto/one-shot)
-    #   - Envoyer le calque actif au Mac (via raw_hid_send())
+    # -------------------------------------------------------------------------
+    # Raw HID communication module (bidirectional 32-byte HID reports)
+    # Used by app_layer_sync.c for:
+    #   - Receiving commands from Mac (target layer, auto/one-shot flags)
+    #   - Sending the active layer back to Mac (via raw_hid_send())
+    # Provides: raw_hid/events.h, raw_hid_send(), raw_hid_received_event
+    # -------------------------------------------------------------------------
     - name: zmk-raw-hid
       remote: zzeneg
       revision: main
 
   # ==========================================================================
-  # CONFIG (ce dépôt lui-même)
+  # SELF (this repository)
   # ==========================================================================
-  # path: config indique que ce dépôt est le dossier de configuration ZMK.
-  # West s'attend à trouver ici : *.conf, *.keymap, *.overlay, etc.
+  # path: config tells west that this repo IS the ZMK config directory.
+  # West expects to find here: *.conf, *.keymap, *.overlay, etc.
   #
   self:
     path: config

@@ -1,39 +1,54 @@
 // =============================================================================
-// SELENIUM KEYMAP - Configuration principale
+// SELENIUM KEYMAP — Main Configuration
 // =============================================================================
 //
-
-// Déclaration du comportement custom &app_layer
-// Obligatoire pour que le compilateur devicetree connaisse &app_layer
-/ {
-    app_layer: behavior_app_layer {
-        compatible = "zmk,behavior-app-layer";
-        #binding-cells = <0>;
-    };
-};
-
-// Options de layout clavier depuis le module zmk-config-selenium.
-// Voir https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
+// This file defines the keyboard layout using the zmk-config-selenium module.
+// The SELENIUM_KEYMAP_BINDINGS macro provides a template for the base layer,
+// and selenium.keymap fills in the home-row mods, layer-taps, and combos.
 //
-#define KB_LAYOUT_ERGOL      // Layout ergonomique (Sofle/Corne style, colonnes staggered)
-#define MACOS                 // Raccourcis clavier macOS (Cmd au lieu de Ctrl)
-#define HT_HOME_ROW_MODS     // Home-row mods : touches lettres deviennent modificateurs si maintenues
-#define HRM_SHIFT             // Shift est géré par home-row mods sur les touches E/R
-#define PINKY_MOD_HOLD        // Auriculaire : les mods sur auriculaires nécessitent un maintien
-#define SHORT_TAPPING_TERM 250 // Délai court (250ms) pour distinguer tap vs hold
+// See: https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
+//
 
 // =============================================================================
-// MACRO DE LAYOUT PRINCIPAL (Base Layer)
+// LAYOUT OPTIONS (from zmk-config-selenium)
+// =============================================================================
+
+// Ergonomic column-staggered layout (Sofle/Corne style)
+#define KB_LAYOUT_ERGOL
+
+// macOS keybindings (Cmd instead of Ctrl for shortcuts)
+#define MACOS
+
+// Home-row mods: letter keys become modifiers when held
+#define HT_HOME_ROW_MODS
+
+// Shift is handled by home-row mods on E/R keys
+#define HRM_SHIFT
+
+// Pinky modifiers require holding (not tap)
+#define PINKY_MOD_HOLD
+
+// Short tapping term: 250ms to distinguish tap vs hold
+#define SHORT_TAPPING_TERM 250
+
+// =============================================================================
+// BASE LAYOUT MACRO
 // =============================================================================
 //
-// Ce macro définit les 6 rangées du clavier (3 gauches + 3 droites).
-// Les paramètres LOUT/LROW/RROW/ROUT sont injectés par selenium.keymap
-// et contiennent les bindings pour chaque position du clavier.
+// Defines all 5 rows of the keyboard:
+//   Row 1 (top):       numbers, ESC, arrows, BACKSPACE
+//   Row 2 (home):      LOUT1/LROW1 = outer/home keys, filled by selenium.keymap
+//   Row 3 (bottom):    LOUT2/LROW2 = outer/home keys, filled by selenium.keymap
+//   Row 4 (alpha low): LOUT3/LROW3 = outer/home keys, filled by selenium.keymap
+//   Row 5 (thumbs):    LT1/LT2/LT3 = left thumb keys, RT1/RT2/RT3 = right thumb keys
 //
-// Les LT1/LT2/LT3/RT3/RT2/RT1 sont les touches du thumb cluster (pouces).
+// Parameters:
+//   LOUT/LROW/RROW/ROUT: Injected by selenium.keymap (home-row mods, layer-taps)
+//   LT1/LT2/LT3/RT3/RT2/RT1: Thumb cluster keys (layer-taps, modifiers, app_layer)
 //
-// NOTE : La 3ème rangée (pouces) contient les calques temporaires et
-//         le toggle du calque d'application (&app_layer).
+// &app_layer on the left thumb toggles the current app layer:
+//   1 press = activate the layer stored in memory (from Mac's command)
+//   2 presses = deactivate (return to base layer)
 //
 #define SELENIUM_KEYMAP_BINDINGS(LOUT1,  LROW1,  RROW1,  ROUT1, \
                                  LOUT2,  LROW2,  RROW2,  ROUT2, \
@@ -45,52 +60,69 @@
     LOUT3   LROW3                               &kp RIGHT_ARROW                           RROW3  ROUT3         \
     &kp RIGHT  &none &app_layer  LT1  LT2  LT3              &none                      RT3  RT2  RT1  &none &kp UP
 
-// Inclusion des bindings générés par selenium.keymap
-// (home-row mods, layer-taps, combos, etc.)
+// Include the selenium-generated bindings
+// (home-row mods, layer-taps, combos are defined here)
 #include <selenium/selenium.keymap>
+
+// =============================================================================
+// CUSTOM BEHAVIOR: &app_layer (toggle app layer)
+// =============================================================================
+//
+// Declares the &app_layer behavior node in the devicetree.
+// This allows using &app_layer in the keymap bindings above.
+// The behavior driver is in zmk-dongle-display/behavior_app_layer.c.
+// It toggles current_app_layer (set by Mac via Raw HID) on/off.
+//
+/ {
+    app_layer: behavior_app_layer {
+        compatible = "zmk,behavior-app-layer";
+        #binding-cells = <0>;
+    };
+};
 
 / {
     // =============================================================================
-    // CONFIGURATION DES CALQUES D'APPLICATION
+    // APP LAYER CONFIGURATION (read by Selenite on Mac)
     // =============================================================================
     //
-    // Ce nœud est lu par Selenite (Mac) pour :
-    //   1. Connaître les noms des calques (pour l'overlay)
-    //   2. Saver quels calques s'activent en mode Auto (auto-layers)
+    // This node is parsed by Selenite when importing the keymap file.
+    // It provides:
+    //   1. Layer display names (shown in the overlay and menu bar)
+    //   2. Auto-layer list (layers that activate immediately on app focus)
     //
+
     app_layer_config: app_layer_config {
         compatible = "app,layer-config";
 
-        // Liste des calques qui s'activent TOUT SEULS quand l'app est focusée.
-        // Mode Auto : le calque est activé immédiatement sans appuyer sur &app_layer.
-        // Les calques NON listés ici sont en mode Manuel :
-        //   → Le calque est stocké en mémoire, l'utilisateur active via &app_layer.
+        // Layers listed here activate AUTOMATICALLY when their assigned app is focused.
+        // Auto mode: the layer is activated immediately by app_layer_sync.c on the dongle,
+        // no need to press &app_layer.
         //
-        // Exemple : <10> = seul le calque 10 (Calculatrice) est en auto-activation.
-        //            Les calques 7 (Autocad), 8 (Word), 9 (Excel) sont en mode Manuel.
+        // Layers NOT listed here are in Manual mode:
+        //   The layer number is stored in memory, user activates it by pressing &app_layer.
+        //
+        // Example: <10> = only layer 10 (Calculator) auto-activates.
+        //          Layers 7 (Autocad), 8 (Word), 9 (Excel) require manual &app_layer press.
         auto-layers = <10>;
     };
 
     keymap {
         // =====================================================================
-        // CALQUES D'APPLICATION (overlays partiels)
+        // APPLICATION LAYERS (partial overlays)
         // =====================================================================
         //
-        // Ces calques se SUPERPOSENT au calque de base.
-        // Seules les touches définies ici remplacent celles de la base.
-        // Les touches &kp N0 sont des placeholders (elles envoient "0" et sont
-        // à remplacer par les vrais bindings de chaque application).
+        // These layers OVERLAY on top of the base layer.
+        // Only the keys defined here replace the base layer keys.
+        // All other keys fall through to the base layer.
         //
-        // "display-name" est le nom affiché dans Selenite (Mac) pour l'overlay
-        // et dans la barre de menus.
-        //
-        // &app_layer (sur la rangée des pouces) permet de basculer ces calques :
-        //   1 appui  = activer le calque de l'app courante
-        //   2 appuis = désactiver (retour à la base)
+        // "display-name" is the name shown in Selenite's overlay (bubble + menu bar).
+        // &kp N0/N1 keys are placeholders — replace with real app-specific bindings.
         //
 
-        // Calque 7 : Autocad
-        // Raccourcis spécifiques à Autodesk Autocad
+        // -----------------------------------------------------------------
+        // Layer 7: Autocad
+        // Autodesk Autocad-specific shortcuts
+        // -----------------------------------------------------------------
         app_layer_7: app_layer_7 {
             bindings = <
                 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0    &kp N0 &kp N0 &kp N0 &kp N0 &kp N0 &kp N0
@@ -102,8 +134,10 @@
             display-name = "Autocad";
         };
 
-        // Calque 8 : Word
-        // Raccourcis spécifiques à Microsoft Word
+        // -----------------------------------------------------------------
+        // Layer 8: Word
+        // Microsoft Word-specific shortcuts
+        // -----------------------------------------------------------------
         app_layer_8: app_layer_8 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
@@ -115,8 +149,10 @@
             display-name = "Word";
         };
 
-        // Calque 9 : Excel
-        // Raccourcis spécifiques à Microsoft Excel
+        // -----------------------------------------------------------------
+        // Layer 9: Excel
+        // Microsoft Excel-specific shortcuts
+        // -----------------------------------------------------------------
         app_layer_9: app_layer_9 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
@@ -128,10 +164,13 @@
             display-name = "Excel";
         };
 
-        // Calque 10 : Calculatrice (mode Auto)
-        // Ce calque est dans auto-layers, il s'active TOUT SEUL au focus de l'app.
-        // Pas besoin d'appuyer sur &app_layer.
-        // Pavé numérique en layout téléphone : 7-8-9 / 4-5-6 / -2-3
+        // -----------------------------------------------------------------
+        // Layer 10: Calculator (AUTO mode)
+        // -----------------------------------------------------------------
+        // This layer is listed in auto-layers, so it activates IMMEDIATELY
+        // when the assigned app is focused. No need to press &app_layer.
+        // Numpad layout: 7-8-9 / 4-5-6 / .-2-3
+        //
         app_layer_10: app_layer_10 {
             bindings = <
                 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1    &kp N1 &kp N1 &kp N1 &kp N1 &kp N1 &kp N1
