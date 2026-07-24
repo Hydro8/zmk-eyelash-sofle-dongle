@@ -2,6 +2,15 @@
 // SELENIUM KEYMAP - Configuration principale
 // =============================================================================
 //
+
+// Déclaration du comportement custom &app_layer
+// Obligatoire pour que le compilateur devicetree connaisse &app_layer
+/ {
+    app_layer: behavior_app_layer {
+        compatible = "zmk,behavior-app-layer";
+    };
+};
+
 // Options de layout clavier depuis le module zmk-config-selenium.
 // Voir https://github.com/keebs34/zmk-config-selenium/blob/main/include/selenium/settings.h
 //
