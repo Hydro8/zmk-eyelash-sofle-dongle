@@ -74,6 +74,21 @@
 // It toggles current_app_layer (set by Mac via Raw HID) on/off.
 //
 / {
+    /*
+     * Custom behavior node for the app layer toggle.
+     * Referenced as &app_layer in the keymap bindings.
+     *
+     * compatible must match DT_DRV_COMPAT in behavior_app_layer.c
+     * (zmk,behavior-app-layer → zmk_behavior_app_layer).
+     *
+     * #binding-cells = <0> means this behavior takes no parameters
+     * in the keymap binding: &app_layer (no extra config needed).
+     *
+     * status = "okay" explicitly enables this node.
+     * Although root-level nodes default to "okay" in Zephyr,
+     * we set it explicitly to avoid any ambiguity with
+     * DT_HAS_COMPAT_STATUS_OKAY checks in the C code.
+     */
     app_layer: behavior_app_layer {
         compatible = "zmk,behavior-app-layer";
         #binding-cells = <0>;
