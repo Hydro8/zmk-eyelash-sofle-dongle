@@ -42,9 +42,20 @@ jobs:
       - name: Build Dongle
         run: west build -b nice_nano@2 -s zmk/app --pristine -- -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package -DSHIELD=eyelash_sofle_central_dongle -DSHIELD=dongle_display -DSHIELD=raw_hid_adapter
 
-      - name: Upload dts.pre
+      - name: Save devicetree after build attempt
+        if: always()
+        run: |
+          cp build/zephyr/zephyr.dts.pre ${{ github.workspace }}/zephyr.dts.pre 2>/dev/null || true
+          cp build/zephyr/zephyr.dts ${{ github.workspace }}/zephyr.dts 2>/dev/null || true
+          cp build/zephyr/include/generated/zephyr/zephyr.dts ${{ github.workspace }}/zephyr_generated.dts 2>/dev/null || true
+          ls -la ${{ github.workspace }}/zephyr* 2>/dev/null || true
+
+      - name: Upload devicetree files
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dts-pre
-          path: build/zephyr/zephyr.dts.pre
+          path: |
+            zephyr.dts.pre
+            zephyr.dts
+            zephyr_generated.dts
