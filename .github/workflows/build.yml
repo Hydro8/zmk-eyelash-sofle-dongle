@@ -21,7 +21,7 @@ jobs:
     name: Build
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
     with:
-      config-path: config
+      config_path: config
 
   # ──────────────────────────────────────────────
   # Job 2 : Extraire le .dts.pre avec le keymap
