@@ -40,8 +40,8 @@ jobs:
         run: pip3 install -r zephyr/scripts/requirements.txt
 
       - name: Build Dongle
-        run: west build -b nice_nano_v2 -s zmk/app --pristine -- -DSHIELD=eyelash_sofle_central_dongle -DSHIELD=dongle_display -DSHIELD=raw_hid_adapter
-
+        run: west build -b nice_nano_v2 -s zmk/app --pristine -- -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package -DSHIELD=eyelash_sofle_central_dongle -DSHIELD=dongle_display -DSHIELD=raw_hid_adapter
+        
       - name: Upload dts.pre
         if: always()
         uses: actions/upload-artifact@v4
