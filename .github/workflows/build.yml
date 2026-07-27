@@ -11,15 +11,15 @@ jobs:
     secrets: inherit
 
   # ---------------------------------------------------------------------------
-  # Separate job: build the peripheral, extract merged devicetree (with keymap)
-  # then run the Python parser to produce keymap.json
+  # Build peripheral-left with the ZMK Docker image (has everything pre-installed)
+  # then extract the merged devicetree containing the keymap
   # ---------------------------------------------------------------------------
   generate-keymap-json:
     name: Generate keymap.json
     runs-on: ubuntu-latest
-    # runs in parallel with build (no needs = independent)
-    env:
-      ZEPHYR_SDK_INSTALL_DIR: /opt/zephyr-sdk
+
+    container:
+      image: ghcr.io/zmkfirmware/zmk-dev-arm:latest
 
     steps:
       # ---- 1. Checkout source ------------------------------------------------
@@ -29,42 +29,19 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      # ---- 2. Bootstrap Python / West ----------------------------------------
-      - name: Install Python dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            git cmake ninja-build ccache dfu-util device-tree-compiler \
-            python3 python3-pip python3-venv \
-            gcc gcc-aarch64-linux-gnu gcc-arm-none-eabi
-          python3 -m pip install --break-system-packages west
-
-      # ---- 3. Init West workspace (same layout as the reusable workflow) -----
+      # ---- 2. Init West workspace ---------------------------------------------
       - name: West init
         run: |
           west init -l config
           west update 2>&1 || west update 2>&1
 
-      # ---- 4. Install Zephyr Python requirements -----------------------------
-      - name: Install Zephyr requirements
-        run: |
-          pip3 install --break-system-packages -r zephyr/scripts/requirements.txt
-
-      # ---- 5. Install Zephyr SDK ---------------------------------------------
-      - name: Install Zephyr SDK
-        run: |
-          wget -q https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz
-          tar xzf zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz -C /opt
-          /opt/zephyr-sdk-0.16.5/setup.sh -t arm -c
-
-      # ---- 6. Build peripheral-left (contains the keymap) --------------------
+      # ---- 3. Build peripheral-left (contains the keymap) --------------------
       - name: Build peripheral left
         run: |
           west build -b nice_nano@2 -s config \
-            -- -DSHIELD=eyelash_sofle_peripheral_left \
-               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package
+            -- -DSHIELD=eyelash_sofle_peripheral_left
 
-      # ---- 7. Collect ALL devicetree files -----------------------------------
+      # ---- 4. Collect ALL devicetree files -----------------------------------
       - name: Collect devicetree files
         run: |
           BUILD_DIR=build
@@ -72,28 +49,19 @@ jobs:
 
           mkdir -p "${ARTIFACT_DT}"
 
-          # Preprocessed board DTS (before overlays)
           cp "${BUILD_DIR}/zephyr/zephyr.dts.pre" "${ARTIFACT_DT}/" 2>/dev/null || true
-
-          # Final merged devicetree (board + shields + keymap overlay)
           cp "${BUILD_DIR}/zephyr/zephyr.dts" "${ARTIFACT_DT}/" 2>/dev/null || true
-
-          # Also grab the include copy that Zephyr generates
           cp "${BUILD_DIR}/zephyr/include/generated/zephyr/zephyr.dts" \
              "${ARTIFACT_DT}/zephyr.dts.generated" 2>/dev/null || true
-
-          # Extracted header (all #defines resolved to numbers)
           cp "${BUILD_DIR}/zephyr/include/generated/zephyr/devicetree_generated.h" \
              "${ARTIFACT_DT}/devicetree_generated.h" 2>/dev/null || true
-
-          # Edge files for shield / keymap overlays (pre-merge)
           find "${BUILD_DIR}" -name "*.dtsi" -path "*zmk*" \
                -exec cp {} "${ARTIFACT_DT}/" \; 2>/dev/null || true
 
           echo "=== Files collected ==="
           ls -lhR "${ARTIFACT_DT}/"
 
-      # ---- 8. Upload devicetree artifacts (for debugging) ---------------------
+      # ---- 5. Upload devicetree artifacts (for debugging) ---------------------
       - name: Upload devicetree files
         uses: actions/upload-artifact@v4
         with:
@@ -101,21 +69,15 @@ jobs:
           path: devicetree-files/
           retention-days: 7
 
-      # ---- 9. Run parser (once written) to produce keymap.json -------------
+      # ---- 6. Run parser (once written) to produce keymap.json -------------
       - name: Generate keymap.json
         run: |
-          # This step will run the Python parser once it's written.
-          # The parser reads the merged zephyr.dts (with expanded macros)
-          # and outputs keymap.json for the Aeklipse / Selenite Mac app.
-          #
           # python3 scripts/parse_keymap.py \
           #   --dts devicetree-files/zephyr.dts \
           #   --output devicetree-files/keymap.json
-          #
           echo "Parser placeholder – keymap.json will be generated here."
-          echo "Once parse_keymap.py is ready, uncomment the lines above."
 
-      # ---- 10. Upload keymap.json artifact -----------------------------------
+      # ---- 7. Upload keymap.json artifact -----------------------------------
       - name: Upload keymap.json
         if: always()
         uses: actions/upload-artifact@v4
