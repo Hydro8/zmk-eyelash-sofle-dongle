@@ -11,15 +11,11 @@ jobs:
     secrets: inherit
 
   # ---------------------------------------------------------------------------
-  # Build peripheral-left with the ZMK Docker image (has everything pre-installed)
-  # then extract the merged devicetree containing the keymap
+  # Build peripheral-left to extract the merged devicetree (with keymap)
   # ---------------------------------------------------------------------------
   generate-keymap-json:
     name: Generate keymap.json
-    runs-on: ubuntu-latest
-
-    container:
-      image: ghcr.io/zmkfirmware/zmk-dev-arm:latest
+    runs-on: ubuntu-22.04
 
     steps:
       # ---- 1. Checkout source ------------------------------------------------
@@ -29,19 +25,51 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      # ---- 2. Init West workspace ---------------------------------------------
+      # ---- 2. Install system packages ------------------------------------------
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            git cmake ninja-build ccache dfu-util device-tree-compiler \
+            python3 python3-pip python3-venv wget \
+            gcc gcc-aarch64-linux-gnu gcc-arm-none-eabi
+
+      # ---- 3. Install Python / West -------------------------------------------
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --break-system-packages west
+
+      # ---- 4. Init West workspace ---------------------------------------------
       - name: West init
         run: |
           west init -l config
           west update 2>&1 || west update 2>&1
 
-      # ---- 3. Build peripheral-left (contains the keymap) --------------------
+      # ---- 5. Install Zephyr Python requirements -----------------------------
+      - name: Install Zephyr requirements
+        run: |
+          pip3 install --break-system-packages -r zephyr/scripts/requirements.txt
+
+      # ---- 6. Install Zephyr SDK (with retry) --------------------------------
+      - name: Install Zephyr SDK
+        run: |
+          wget --tries=3 --timeout=60 \
+            -O /tmp/zephyr-sdk.tar.gz \
+            "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz" \
+          || wget --tries=3 --timeout=60 \
+            -O /tmp/zephyr-sdk.tar.gz \
+            "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.4/zephyr-sdk-0.16.4_linux-x86_64_minimal.tar.gz"
+          tar xzf /tmp/zephyr-sdk.tar.gz -C /opt
+          /opt/zephyr-sdk-0.16.*/setup.sh -t arm -c
+
+      # ---- 7. Build peripheral-left (contains the keymap) --------------------
       - name: Build peripheral left
         run: |
           west build -b nice_nano@2 -s config \
-            -- -DSHIELD=eyelash_sofle_peripheral_left
+            -- -DSHIELD=eyelash_sofle_peripheral_left \
+               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package
 
-      # ---- 4. Collect ALL devicetree files -----------------------------------
+      # ---- 8. Collect ALL devicetree files -----------------------------------
       - name: Collect devicetree files
         run: |
           BUILD_DIR=build
@@ -61,7 +89,7 @@ jobs:
           echo "=== Files collected ==="
           ls -lhR "${ARTIFACT_DT}/"
 
-      # ---- 5. Upload devicetree artifacts (for debugging) ---------------------
+      # ---- 9. Upload devicetree artifacts ------------------------------------
       - name: Upload devicetree files
         uses: actions/upload-artifact@v4
         with:
@@ -69,15 +97,7 @@ jobs:
           path: devicetree-files/
           retention-days: 7
 
-      # ---- 6. Run parser (once written) to produce keymap.json -------------
-      - name: Generate keymap.json
-        run: |
-          # python3 scripts/parse_keymap.py \
-          #   --dts devicetree-files/zephyr.dts \
-          #   --output devicetree-files/keymap.json
-          echo "Parser placeholder – keymap.json will be generated here."
-
-      # ---- 7. Upload keymap.json artifact -----------------------------------
+      # ---- 10. Upload keymap.json artifact -----------------------------------
       - name: Upload keymap.json
         if: always()
         uses: actions/upload-artifact@v4
