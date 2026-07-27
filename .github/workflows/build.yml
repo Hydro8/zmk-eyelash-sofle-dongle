@@ -19,7 +19,7 @@ jobs:
   # ──────────────────────────────────────────────
   build:
     name: Build
-    uses: zmkfirmware/zmk/.github/workflows/build-user-configs.yml@main
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
     with:
       config-path: config
 
