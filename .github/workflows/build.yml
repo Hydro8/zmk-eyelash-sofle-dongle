@@ -72,7 +72,8 @@ jobs:
             -DSHIELD=eyelash_sofle_central_dongle \
             -DDONGLE_DISPLAY=1 \
             -DRAW_HID_ADAPTER=1 \
-            -DZMK_CONFIG="${{ github.workspace }}/config"
+            -DZMK_CONFIG="${{ github.workspace }}/config" \
+            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config"
         continue-on-error: false
 
       # ── 5. Capture des fichiers DTS APRÈS CMake ──
