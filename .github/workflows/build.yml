@@ -28,7 +28,6 @@ jobs:
           sudo apt-get install -y ninja-build gettext cmake git \
             gcc-arm-none-eabi device-tree-compiler
           pip3 install west
-          pip3 install -r zephyr/scripts/requirements.txt
 
       - name: West Init
         run: west init -l config
@@ -37,18 +36,8 @@ jobs:
         timeout-minutes: 15
         run: west update || west update
 
-      - name: Debug - Find paths
-        run: |
-          echo "=== Workspace root ==="
-          pwd
-          echo "=== Root contents ==="
-          ls -la
-          echo "=== Looking for zmk app CMakeLists ==="
-          find . -maxdepth 5 -name "CMakeLists.txt" | grep -i zmk
-          echo "=== Zephyr cmake modules ==="
-          find . -maxdepth 5 -name "ZephyrConfig.cmake" 2>/dev/null
-          echo "=== zephyr/share ==="
-          ls zephyr/share/ 2>/dev/null || echo "no zephyr/share"
+      - name: Install Zephyr Python requirements
+        run: pip3 install -r zephyr/scripts/requirements.txt
 
       - name: Build Dongle
         run: west build -b nice_nano_v2 -s zmk/app --pristine -- -DSHIELD=eyelash_sofle_central_dongle -DSHIELD=dongle_display -DSHIELD=raw_hid_adapter
