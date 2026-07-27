@@ -30,7 +30,7 @@ jobs:
         run: west init -l config
 
       - name: West Update
-        run: west update -o -L
+        run: west update --fetch-opt=--depth=1
 
       - name: Build Dongle
         env:
