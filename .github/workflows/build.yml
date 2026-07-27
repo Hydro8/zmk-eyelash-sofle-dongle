@@ -37,7 +37,7 @@ jobs:
         env:
           ZEPHYR_TOOLCHAIN_VARIANT: gnuarmemb
           GNUARMEMB_TOOLCHAIN_PATH: /usr
-        run: west build -b nice_nano@2 --pristine -s config --shield eyelash_sofle_central_dongle dongle_display raw_hid_adapter
+        run: west build -b nice_nano@2 --pristine -s config -- -DSHIELD=eyelash_sofle_central_dongle -DSHIELD=dongle_display -DSHIELD=raw_hid_adapter
 
       - name: Upload dts.pre
         if: always()
