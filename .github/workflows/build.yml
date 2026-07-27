@@ -1,4 +1,5 @@
-name: Build ZMK firmware
+name: Build ZMK Firmware
+
 on:
   workflow_dispatch:
   push:
@@ -8,3 +9,30 @@ on:
 jobs:
   build:
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
+
+  extract-dts-pre:
+    needs: build
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-dev-arm:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: West Init
+        run: west init -l config
+
+      - name: West Update
+        run: west update -o -L
+
+      - name: Build Dongle
+        run: west build -b nice_nano@2 --pristine -s config --shield eyelash_sofle_central_dongle dongle_display raw_hid_adapter
+
+      - name: Upload dts.pre
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dts-pre
+          path: build/zephyr/zephyr.dts.pre
