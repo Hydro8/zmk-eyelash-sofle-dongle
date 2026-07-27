@@ -1,109 +1,130 @@
-name: Build and Generate Keymap
+# .github/workflows/build.yml
+#
+# Workflow ZMK :
+#   1. build          → build firmware (reusable workflow ZMK officielle)
+#   2. extract-dts-pre → build from scratch + capture devicetree files (keymap)
+
+name: ZMK Firmware Build
 
 on:
   push:
+    branches: [main]
   pull_request:
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
+  # ──────────────────────────────────────────────
+  # Job 1 : Build firmware (réutilisable ZMK)
+  # ──────────────────────────────────────────────
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
-    secrets: inherit
+    name: Build
+    uses: zmkfirmware/zmk/.github/workflows/build-user-configs.yml@main
+    with:
+      config-path: config
 
-  # ---------------------------------------------------------------------------
-  # Build peripheral-left to extract the merged devicetree (with keymap)
-  # ---------------------------------------------------------------------------
-  generate-keymap-json:
-    name: Generate keymap.json
-    runs-on: ubuntu-22.04
-
+  # ──────────────────────────────────────────────
+  # Job 2 : Extraire le .dts.pre avec le keymap
+  #          (build from scratch pour avoir tous les fichiers générés)
+  # ──────────────────────────────────────────────
+  extract-dts-pre:
+    name: Extract devicetree files
+    runs-on: ubuntu-latest
     steps:
-      # ---- 1. Checkout source ------------------------------------------------
-      - name: Checkout
+      # ── 1. Checkout ──────────────────────────
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
-      # ---- 2. Install system packages ------------------------------------------
-      - name: Install system packages
+      # ── 2. Dépendances de base ───────────────
+      - name: Install base dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            git cmake ninja-build ccache dfu-util device-tree-compiler \
-            python3 python3-pip python3-venv wget \
-            gcc gcc-aarch64-linux-gnu gcc-arm-none-eabi
+          sudo apt-get install -y \
+            git wget curl python3 python3-pip python3-venv \
+            ninja-build gperf ccache dfu-util device-tree-compiler
 
-      # ---- 3. Install Python / West -------------------------------------------
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install --break-system-packages west
+      # ── 3. West + Zephyr ─────────────────────
+      - name: Install West
+        run: pip3 install --user west
 
-      # ---- 4. Init West workspace ---------------------------------------------
+      - name: Ensure west in PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: West init
+        run: west init -l config
+
+      - name: West update
         run: |
-          west init -l config
-          west update 2>&1 || west update 2>&1
+          west update || west update
 
-      # ---- 5. Install Zephyr Python requirements -----------------------------
-      - name: Install Zephyr requirements
+      - name: Install Python requirements
+        run: pip3 install --user -r zephyr/scripts/requirements.txt
+
+      # ── 4. CMake configure (sans build) ─────
+      - name: CMake configure
         run: |
-          pip3 install --break-system-packages -r zephyr/scripts/requirements.txt
+          mkdir -p build-dongle
+          cmake -B build-dongle -S zmk/app \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package \
+            -DBOARD=nice_nano@2 \
+            -DSHIELD=eyelash_sofle_central_dongle \
+            -DDONGLE_DISPLAY=1 \
+            -DRAW_HID_ADAPTER=1 \
+            -DZMK_CONFIG="${{ github.workspace }}/config"
+        continue-on-error: false
 
-      # ---- 6. Install Zephyr SDK (with retry) --------------------------------
-      - name: Install Zephyr SDK
+      # ── 5. Capture des fichiers DTS APRÈS CMake ──
+      - name: Capture devicetree files
         run: |
-          wget --tries=3 --timeout=60 \
-            -O /tmp/zephyr-sdk.tar.gz \
-            "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz" \
-          || wget --tries=3 --timeout=60 \
-            -O /tmp/zephyr-sdk.tar.gz \
-            "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.4/zephyr-sdk-0.16.4_linux-x86_64_minimal.tar.gz"
-          tar xzf /tmp/zephyr-sdk.tar.gz -C /opt
-          /opt/zephyr-sdk-0.16.*/setup.sh -t arm -c
+          DTS_OUT="${{ github.workspace }}/dts-extracted"
+          mkdir -p "$DTS_OUT"
 
-      # ---- 7. Build peripheral-left (contains the keymap) --------------------
-      - name: Build peripheral left
-        run: |
-          west build -b nice_nano@2 -s config \
-            -- -DSHIELD=eyelash_sofle_peripheral_left \
-               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package
+          cp build-dongle/zephyr/zephyr.dts.pre     "$DTS_OUT/" 2>/dev/null || echo "zephyr.dts.pre not found"
+          cp build-dongle/zephyr/zephyr.dts          "$DTS_OUT/" 2>/dev/null || echo "zephyr.dts not found"
+          cp build-dongle/zephyr/include/generated/zephyr/zephyr.dts  "$DTS_OUT/" 2>/dev/null || echo "generated zephyr.dts not found"
 
-      # ---- 8. Collect ALL devicetree files -----------------------------------
-      - name: Collect devicetree files
-        run: |
-          BUILD_DIR=build
-          ARTIFACT_DT=devicetree-files
+          find build-dongle/zephyr -name "*.dtsi" -exec cp {} "$DTS_OUT/" \; 2>/dev/null || true
+          find build-dongle -name "*.dts.pre" -exec cp {} "$DTS_OUT/" \; 2>/dev/null || true
 
-          mkdir -p "${ARTIFACT_DT}"
+          echo "=== Captured devicetree files ==="
+          ls -la "$DTS_OUT/"
+          echo ""
+          echo "=== zephyr.dts.pre line count ==="
+          wc -l "$DTS_OUT/zephyr.dts.pre" 2>/dev/null || echo "not available"
+          echo ""
+          echo "=== Keymap section check ==="
+          grep -c "keymap" "$DTS_OUT/zephyr.dts.pre" 2>/dev/null || echo "no keymap found"
 
-          cp "${BUILD_DIR}/zephyr/zephyr.dts.pre" "${ARTIFACT_DT}/" 2>/dev/null || true
-          cp "${BUILD_DIR}/zephyr/zephyr.dts" "${ARTIFACT_DT}/" 2>/dev/null || true
-          cp "${BUILD_DIR}/zephyr/include/generated/zephyr/zephyr.dts" \
-             "${ARTIFACT_DT}/zephyr.dts.generated" 2>/dev/null || true
-          cp "${BUILD_DIR}/zephyr/include/generated/zephyr/devicetree_generated.h" \
-             "${ARTIFACT_DT}/devicetree_generated.h" 2>/dev/null || true
-          find "${BUILD_DIR}" -name "*.dtsi" -path "*zmk*" \
-               -exec cp {} "${ARTIFACT_DT}/" \; 2>/dev/null || true
-
-          echo "=== Files collected ==="
-          ls -lhR "${ARTIFACT_DT}/"
-
-      # ---- 9. Upload devicetree artifacts ------------------------------------
-      - name: Upload devicetree files
+      # ── 6. Upload artefacts ──────────────────
+      - name: Upload devicetree artifacts
         uses: actions/upload-artifact@v4
         with:
           name: devicetree-files
-          path: devicetree-files/
+          path: dts-extracted/
           retention-days: 7
 
-      # ---- 10. Upload keymap.json artifact -----------------------------------
-      - name: Upload keymap.json
+      # ── 7. Tente le build (échoue pour dongle = normal) ──
+      - name: Attempt build (expected to fail for dongle)
+        run: |
+          cmake --build build-dongle
+        continue-on-error: true
+
+      - name: Capture post-build devicetree
+        if: always()
+        run: |
+          DTS_OUT="${{ github.workspace }}/dts-extracted"
+          find build-dongle -name "*.dts" -o -name "*.dtsi" -o -name "*.dts.pre" 2>/dev/null | while read f; do
+            dest="$DTS_OUT/post-build-$(basename "$f")"
+            cp "$f" "$dest"
+          done
+          echo "=== Post-build files ==="
+          ls -la "$DTS_OUT/"
+
+      - name: Upload post-build artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: keymap-json
-          path: |
-            devicetree-files/keymap.json
-          retention-days: 14
-          if-no-files-found: warn
+          name: devicetree-post-build
+          path: dts-extracted/
+          retention-days: 7
