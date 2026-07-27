@@ -30,7 +30,8 @@ jobs:
         run: west init -l config
 
       - name: West Update
-        run: west update --fetch-opt=--depth=1
+        timeout-minutes: 15
+        run: west update || west update
 
       - name: Build Dongle
         env:
