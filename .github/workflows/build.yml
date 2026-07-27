@@ -2,9 +2,8 @@ name: Build and Generate Keymap
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,7 +20,7 @@ jobs:
   generate-keymap-json:
     name: Generate keymap.json
     runs-on: ubuntu-latest
-    needs: []  # independent – runs in parallel with build
+    # runs in parallel with build (no needs = independent)
     env:
       ZEPHYR_SDK_INSTALL_DIR: /opt/zephyr-sdk
 
