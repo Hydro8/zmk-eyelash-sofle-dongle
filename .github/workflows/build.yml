@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y git wget curl python3 python3-pip python3-venv ninja-build gperf ccache dfu-util device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y git wget curl python3 python3-pip python3-venv ninja-build gperf ccache dfu-util device-tree-compiler gcc-arm-none-eabi
 
       - name: Install West
         run: pip3 install --user west
@@ -39,7 +39,7 @@ jobs:
 
       - name: West build
         continue-on-error: true
-        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package" -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
+        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package" -DBOARD_ROOT="$GITHUB_WORKSPACE" -DZEPHYR_TOOLCHAIN_VARIANT=gnu -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
 
       - name: Capture DTS
         if: always()
