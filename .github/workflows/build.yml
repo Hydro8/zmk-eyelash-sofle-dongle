@@ -1,5 +1,4 @@
 name: ZMK Firmware Build
-
 on:
   push:
     branches: [main]
@@ -17,15 +16,30 @@ jobs:
   extract-dts-pre:
     name: Extract devicetree files
     runs-on: ubuntu-latest
-    container:
-      image: zmkfirmware/zmk-build-arm:stable
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y git wget curl python3 python3-pip ninja-build gperf ccache dfu-util device-tree-compiler
+
+      - name: Install West
+        run: pip3 install --user west
+
+      - name: Add west to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: West init + update
-        run: west init -l config && west update || west update
+        run: west init -l config && west update
+
+      - name: Install Python requirements
+        run: pip3 install --user -r zephyr/scripts/requirements.txt
+
+      - uses: carlosperate/zephyr-sdk-action@v0.1
+        with:
+          version: '0.16.5'
+          toolchain: arm-zephyr-eabi
 
       - name: West build
         continue-on-error: true
@@ -33,7 +47,15 @@ jobs:
 
       - name: Capture DTS
         if: always()
-        run: mkdir -p dts-extracted && cp build-dongle/zephyr/zephyr.dts.pre dts-extracted/ 2>/dev/null; cp build-dongle/zephyr/zephyr.dts dts-extracted/ 2>/dev/null; find build-dongle -name "*.dtsi" -exec cp {} dts-extracted/ \; 2>/dev/null; ls -la dts-extracted/; grep -c "keymap" dts-extracted/zephyr.dts.pre 2>/dev/null || echo "no keymap"
+        run: |
+          mkdir -p dts-extracted
+          cp build-dongle/zephyr/zephyr.dts.pre dts-extracted/ 2>/dev/null || true
+          cp build-dongle/zephyr/zephyr.dts dts-extracted/ 2>/dev/null || true
+          find build-dongle -name "*.dtsi" -exec cp {} dts-extracted/ \; 2>/dev/null || true
+          echo "=== Files captured ==="
+          ls -la dts-extracted/
+          echo "=== Keymap check ==="
+          grep -c "keymap" dts-extracted/zephyr.dts.pre 2>/dev/null || echo "no keymap found"
 
       - uses: actions/upload-artifact@v4
         if: always()
