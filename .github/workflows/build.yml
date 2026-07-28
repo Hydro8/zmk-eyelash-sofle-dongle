@@ -16,44 +16,19 @@ jobs:
   extract-dts-pre:
     name: Extract devicetree files
     runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y git wget curl python3 python3-pip ninja-build gperf ccache dfu-util device-tree-compiler
-
-      - name: Install West
-        run: pip3 install --user west
-
-      - name: Add west to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
-
       - name: West init + update
         run: west init -l config && west update
 
-      - name: Install Python requirements
-        run: pip3 install --user -r zephyr/scripts/requirements.txt
-
-      - name: Install Zephyr SDK
-        run: |
-          curl -LfsS "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz" -o sdk.tar.gz
-          tar xzf sdk.tar.gz
-          rm sdk.tar.gz
-          ./zephyr-sdk-0.16.5/setup.sh -t arm-zephyr-eabi -c -q
-          echo "ZEPHYR_SDK_INSTALL_DIR=$GITHUB_WORKSPACE/zephyr-sdk-0.16.5" >> $GITHUB_ENV
-
-      - name: Verify SDK
-        run: |
-          echo "SDK dir: $GITHUB_WORKSPACE/zephyr-sdk-0.16.5"
-          ls -la "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/"
-          ls -la "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/ cmake/ 2>/dev/null || echo "no cmake dir"
-          test -f "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/sdk_env.sh" && echo "SDK env OK" || echo "NO sdk_env.sh"
-
       - name: West build
         continue-on-error: true
-        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config" -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr-sdk-0.16.5"
+        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
 
       - name: Capture DTS
         if: always()
