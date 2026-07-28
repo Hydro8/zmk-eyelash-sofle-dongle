@@ -36,14 +36,24 @@ jobs:
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
-      - uses: carlosperate/zephyr-sdk-action@v0.1
-        with:
-          version: '0.16.5'
-          toolchain: arm-zephyr-eabi
+      - name: Install Zephyr SDK
+        run: |
+          curl -LfsS "https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.5/zephyr-sdk-0.16.5_linux-x86_64_minimal.tar.gz" -o sdk.tar.gz
+          tar xzf sdk.tar.gz
+          rm sdk.tar.gz
+          ./zephyr-sdk-0.16.5/setup.sh -t arm-zephyr-eabi -c -q
+          echo "ZEPHYR_SDK_INSTALL_DIR=$GITHUB_WORKSPACE/zephyr-sdk-0.16.5" >> $GITHUB_ENV
+
+      - name: Verify SDK
+        run: |
+          echo "SDK dir: $GITHUB_WORKSPACE/zephyr-sdk-0.16.5"
+          ls -la "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/"
+          ls -la "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/ cmake/ 2>/dev/null || echo "no cmake dir"
+          test -f "$GITHUB_WORKSPACE/zephyr-sdk-0.16.5/sdk_env.sh" && echo "SDK env OK" || echo "NO sdk_env.sh"
 
       - name: West build
         continue-on-error: true
-        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
+        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config" -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr-sdk-0.16.5"
 
       - name: Capture DTS
         if: always()
