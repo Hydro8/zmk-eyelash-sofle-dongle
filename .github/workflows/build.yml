@@ -50,9 +50,9 @@ jobs:
         continue-on-error: true
         run: |
           west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle \
-            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config" \
             -- \
             -DCMAKE_PREFIX_PATH="${{ github.workspace }}/zephyr/share/zephyr-package" \
+            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config" \
             -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" \
             -DZMK_CONFIG="${{ github.workspace }}/config"
 
