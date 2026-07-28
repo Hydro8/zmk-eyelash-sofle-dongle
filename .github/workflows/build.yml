@@ -48,11 +48,9 @@ jobs:
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
-      # ── west build au lieu de cmake direct ──
-      # west build trouve automatiquement les shields custom du workspace
       - name: West build (configure + attempt)
         run: |
-          west build -b nice_nano@2 \
+          west build -s zmk/app -b nice_nano@2 \
             --pristine \
             -d build-dongle \
             -- \
@@ -60,7 +58,6 @@ jobs:
             -DZMK_CONFIG="${{ github.workspace }}/config"
         continue-on-error: true
 
-      # ── Capture des fichiers DTS ──
       - name: Capture devicetree files
         if: always()
         run: |
