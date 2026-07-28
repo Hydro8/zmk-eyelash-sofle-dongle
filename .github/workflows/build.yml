@@ -41,10 +41,22 @@ jobs:
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
+      - name: Ensure Zephyr module for custom shields
+        run: |
+          if [ ! -f config/zephyr/module.yml ]; then
+            mkdir -p config/zephyr
+            cat > config/zephyr/module.yml << 'EOF'
+            build:
+              cmake-ext: true
+            EOF
+          fi
+
       - name: West build
         continue-on-error: true
         run: |
-          west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- \
+          west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle \
+            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config" \
+            -- \
             -DCMAKE_PREFIX_PATH="${{ github.workspace }}/zephyr/share/zephyr-package" \
             -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" \
             -DZMK_CONFIG="${{ github.workspace }}/config"
