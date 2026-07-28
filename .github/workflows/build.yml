@@ -1,8 +1,4 @@
 # .github/workflows/build.yml
-#
-# Workflow ZMK :
-#   1. build          → build firmware (reusable workflow ZMK officielle)
-#   2. extract-dts-pre → build from scratch + capture devicetree files (keymap)
 
 name: ZMK Firmware Build
 
@@ -14,30 +10,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ──────────────────────────────────────────────
-  # Job 1 : Build firmware (réutilisable ZMK)
-  # ──────────────────────────────────────────────
   build:
     name: Build
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
     with:
       config_path: config
 
-  # ──────────────────────────────────────────────
-  # Job 2 : Extraire le .dts.pre avec le keymap
-  #          (build from scratch pour avoir tous les fichiers générés)
-  # ──────────────────────────────────────────────
   extract-dts-pre:
     name: Extract devicetree files
     runs-on: ubuntu-latest
     steps:
-      # ── 1. Checkout ──────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ── 2. Dépendances de base ───────────────
       - name: Install base dependencies
         run: |
           sudo apt-get update
@@ -45,7 +32,6 @@ jobs:
             git wget curl python3 python3-pip python3-venv \
             ninja-build gperf ccache dfu-util device-tree-compiler
 
-      # ── 3. West + Zephyr ─────────────────────
       - name: Install West
         run: pip3 install --user west
 
@@ -62,22 +48,21 @@ jobs:
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
-      # ── 4. CMake configure (sans build) ─────
-      - name: CMake configure
+      # ── west build au lieu de cmake direct ──
+      # west build trouve automatiquement les shields custom du workspace
+      - name: West build (configure + attempt)
         run: |
-          mkdir -p build-dongle
-          cmake -B build-dongle -S zmk/app \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/zephyr/share/zephyr-package \
-            -DBOARD=nice_nano@2 \
-            -DSHIELD=eyelash_sofle_central_dongle \
-            -DDONGLE_DISPLAY=1 \
-            -DRAW_HID_ADAPTER=1 \
-            -DZMK_CONFIG="${{ github.workspace }}/config" \
-            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config"
-        continue-on-error: false
+          west build -b nice_nano@2 \
+            --pristine \
+            -d build-dongle \
+            -- \
+            -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" \
+            -DZMK_CONFIG="${{ github.workspace }}/config"
+        continue-on-error: true
 
-      # ── 5. Capture des fichiers DTS APRÈS CMake ──
+      # ── Capture des fichiers DTS ──
       - name: Capture devicetree files
+        if: always()
         run: |
           DTS_OUT="${{ github.workspace }}/dts-extracted"
           mkdir -p "$DTS_OUT"
@@ -98,35 +83,10 @@ jobs:
           echo "=== Keymap section check ==="
           grep -c "keymap" "$DTS_OUT/zephyr.dts.pre" 2>/dev/null || echo "no keymap found"
 
-      # ── 6. Upload artefacts ──────────────────
       - name: Upload devicetree artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: devicetree-files
-          path: dts-extracted/
-          retention-days: 7
-
-      # ── 7. Tente le build (échoue pour dongle = normal) ──
-      - name: Attempt build (expected to fail for dongle)
-        run: |
-          cmake --build build-dongle
-        continue-on-error: true
-
-      - name: Capture post-build devicetree
-        if: always()
-        run: |
-          DTS_OUT="${{ github.workspace }}/dts-extracted"
-          find build-dongle -name "*.dts" -o -name "*.dtsi" -o -name "*.dts.pre" 2>/dev/null | while read f; do
-            dest="$DTS_OUT/post-build-$(basename "$f")"
-            cp "$f" "$dest"
-          done
-          echo "=== Post-build files ==="
-          ls -la "$DTS_OUT/"
-
-      - name: Upload post-build artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: devicetree-post-build
           path: dts-extracted/
           retention-days: 7
