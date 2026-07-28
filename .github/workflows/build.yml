@@ -43,13 +43,8 @@ jobs:
 
       - name: Ensure Zephyr module for custom shields
         run: |
-          if [ ! -f config/zephyr/module.yml ]; then
-            mkdir -p config/zephyr
-            cat > config/zephyr/module.yml << 'EOF'
-            build:
-              cmake-ext: true
-            EOF
-          fi
+          mkdir -p config/zephyr
+          printf 'build:\n  cmake-ext: true\n' > config/zephyr/module.yml
 
       - name: West build
         continue-on-error: true
