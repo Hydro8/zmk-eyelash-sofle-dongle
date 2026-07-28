@@ -23,9 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git wget curl python3 python3-pip python3-venv ninja-build gperf ccache dfu-util device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y git wget curl python3 python3-pip python3-venv ninja-build gperf ccache dfu-util device-tree-compiler
 
       - name: Install West
         run: pip3 install --user west
@@ -34,39 +32,18 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: West init + update
-        run: |
-          west init -l config
-          west update || west update
+        run: west init -l config && west update || west update
 
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
-      - name: Ensure Zephyr module for custom shields
-        run: |
-          mkdir -p config/zephyr
-          printf 'build:\n  cmake-ext: true\n' > config/zephyr/module.yml
-
       - name: West build
         continue-on-error: true
-        run: |
-          west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle \
-            -- \
-            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/zephyr/share/zephyr-package" \
-            -DZMK_EXTRA_MODULES="${{ github.workspace }}/config" \
-            -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" \
-            -DZMK_CONFIG="${{ github.workspace }}/config"
+        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package" -DBOARD_ROOT="$GITHUB_WORKSPACE/config" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
 
       - name: Capture DTS
         if: always()
-        run: |
-          mkdir -p dts-extracted
-          cp build-dongle/zephyr/zephyr.dts.pre dts-extracted/ 2>/dev/null || true
-          cp build-dongle/zephyr/zephyr.dts dts-extracted/ 2>/dev/null || true
-          find build-dongle -name "*.dtsi" -exec cp {} dts-extracted/ \; 2>/dev/null || true
-          echo "=== Files ==="
-          ls -la dts-extracted/
-          echo "=== Keymap check ==="
-          grep -c "keymap" dts-extracted/zephyr.dts.pre 2>/dev/null || echo "no keymap"
+        run: mkdir -p dts-extracted && cp build-dongle/zephyr/zephyr.dts.pre dts-extracted/ 2>/dev/null; cp build-dongle/zephyr/zephyr.dts dts-extracted/ 2>/dev/null; find build-dongle -name "*.dtsi" -exec cp {} dts-extracted/ \; 2>/dev/null; ls -la dts-extracted/; grep -c "keymap" dts-extracted/zephyr.dts.pre 2>/dev/null || echo "no keymap"
 
       - uses: actions/upload-artifact@v4
         if: always()
