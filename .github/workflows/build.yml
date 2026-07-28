@@ -14,7 +14,7 @@ jobs:
       config_path: config
 
   extract-dts-pre:
-    name: Extract devicetree files
+    name: Build dongle + extract keymap
     runs-on: ubuntu-latest
     container:
       image: zmkfirmware/zmk-build-arm:stable
@@ -26,25 +26,35 @@ jobs:
       - name: West init + update
         run: west init -l config && west update
 
-      - name: West build
+      - name: West build (dongle)
         continue-on-error: true
         run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config" -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package"
 
-      - name: Capture DTS
+      - name: Parse keymap from devicetree
         if: always()
         run: |
-          mkdir -p dts-extracted
-          cp build-dongle/zephyr/zephyr.dts.pre dts-extracted/ 2>/dev/null || true
-          cp build-dongle/zephyr/zephyr.dts dts-extracted/ 2>/dev/null || true
-          find build-dongle -name "*.dtsi" -exec cp {} dts-extracted/ \; 2>/dev/null || true
-          echo "=== Files captured ==="
-          ls -la dts-extracted/
-          echo "=== Keymap check ==="
-          grep -c "keymap" dts-extracted/zephyr.dts.pre 2>/dev/null || echo "no keymap found"
+          python3 scripts/parse_keymap.py build-dongle/zephyr/zephyr.dts.pre -o keymap.json
+          echo "=== Keymap summary ==="
+          python3 -c "
+          import json
+          with open('keymap.json') as f:
+              d = json.load(f)
+          print(f\"Layout: {d['layout']}\")
+          print(f\"Layers: {len(d['layers'])}\")
+          for l in d['layers']:
+              print(f\"  [{l['id']}] {l['name']} ({l['type']}) - {len(l['keys'])} keys\")
+          "
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: devicetree-files
-          path: dts-extracted/
+          name: keymap-json
+          path: keymap.json
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: devicetree-debug
+          path: build-dongle/zephyr/zephyr.dts.pre
           retention-days: 7
