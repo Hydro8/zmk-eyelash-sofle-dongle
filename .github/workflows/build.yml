@@ -28,7 +28,7 @@ jobs:
 
       - name: West build
         continue-on-error: true
-        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
+        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config" -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package"
 
       - name: Capture DTS
         if: always()
