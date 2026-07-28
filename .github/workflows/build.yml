@@ -37,18 +37,9 @@ jobs:
       - name: Install Python requirements
         run: pip3 install --user -r zephyr/scripts/requirements.txt
 
-      - name: Debug - find shield location
-        run: |
-          echo "=== All shield directories ==="
-          find $GITHUB_WORKSPACE -type d -path "*/boards/shields/*" 2>/dev/null
-          echo "=== Eyelash files ==="
-          find $GITHUB_WORKSPACE -type f -name "*eyelash*" 2>/dev/null
-          echo "=== West project list ==="
-          west list
-
       - name: West build
         continue-on-error: true
-        run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
+        run: west build -b nice_nano@2 --pristine -d build-dongle -- -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config"
 
       - name: Capture DTS
         if: always()
