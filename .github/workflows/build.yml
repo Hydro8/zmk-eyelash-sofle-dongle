@@ -26,6 +26,15 @@ jobs:
       - name: West init + update
         run: west init -l config && west update
 
+      - name: Freeze west manifest
+        run: west manifest --freeze > west-frozen.yml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: west-frozen
+          path: west-frozen.yml
+          retention-days: 30
+
       - name: West build (dongle)
         continue-on-error: true
         run: west build -s zmk/app -b nice_nano@2 --pristine -d build-dongle -- -DBOARD_ROOT="$GITHUB_WORKSPACE" -DSHIELD="eyelash_sofle_central_dongle dongle_display raw_hid_adapter" -DZMK_CONFIG="$GITHUB_WORKSPACE/config" -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/zephyr/share/zephyr-package"
