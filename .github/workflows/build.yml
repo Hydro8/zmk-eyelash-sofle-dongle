@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Build
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@1e7371f2654bed123727ec15adb42af344c1bb3d
     with:
       config_path: config
 
@@ -17,7 +17,7 @@ jobs:
     name: Build dongle + extract keymap
     runs-on: ubuntu-latest
     container:
-      image: zmkfirmware/zmk-build-arm:stable
+      image: zmkfirmware/zmk-build-arm@sha256:edb1c953438c6f720ddb79c3762f3972013b7fbbaf4fff3592fc869983e7afc5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +27,7 @@ jobs:
         run: west init -l config && west update
 
       - name: Freeze west manifest
-        run: west manifest --freeze > west-frozen.yml
+        run: west manifest --freeze --active-only > west-frozen.yml
 
       - uses: actions/upload-artifact@v4
         with:
