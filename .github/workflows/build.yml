@@ -68,8 +68,8 @@ jobs:
           path: build-dongle/zephyr/zephyr.dts.pre
           retention-days: 7
 
-  forensic-run200-settings-reset:
-    name: Forensic reconstruct run #200 settings_reset
+  forensic-run200:
+    name: Forensic reconstruct run #200 all firmware
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     container:
@@ -84,8 +84,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/zmk-config /tmp/run200-build
-          mkdir -p /tmp/zmk-config/config
+          rm -rf /tmp/zmk-config /tmp/run200-*
+          mkdir -p /tmp/zmk-config/config /tmp/run200-artifacts
           cp -R config/* /tmp/zmk-config/config/
           west init -l /tmp/zmk-config/config
           cd /tmp/zmk-config
@@ -103,26 +103,72 @@ jobs:
           echo "ZMK:    $(git -C zmk rev-parse HEAD)"
           echo "git describe before override: $(git -C zephyr describe --abbrev=12 --always)"
 
-      - name: Build historical settings_reset
+      - name: Reconstruct and verify all historical firmware
         shell: bash
         env:
           BUILD_VERSION: 9df4b12b5af3
         run: |
           set -euo pipefail
           cd /tmp/zmk-config
-          west build -s zmk/app -d /tmp/run200-build -b "nice_nano@2" -- \
-            -DZMK_CONFIG=/tmp/zmk-config/config \
-            -DSHIELD="settings_reset" \
-            -DZMK_EXTRA_MODULES="${GITHUB_WORKSPACE}" \
-            -DBUILD_VERSION="${BUILD_VERSION}"
-          echo "=== reconstructed SHA256 ==="
-          sha256sum /tmp/run200-build/zephyr/zmk.uf2
-          echo "=== embedded build banner ==="
-          strings /tmp/run200-build/zephyr/zmk.elf | grep -F "Booting Zephyr OS build" || true
 
-      - name: Archive reconstructed UF2
+          build_and_verify() {
+            name="$1"
+            shield="$2"
+            expected="$3"
+            build_dir="/tmp/run200-${name}"
+
+            echo "=== Building ${name} ==="
+            west build -s zmk/app -d "${build_dir}" -b "nice_nano@2" -- \
+              -DZMK_CONFIG=/tmp/zmk-config/config \
+              -DSHIELD="${shield}" \
+              -DZMK_EXTRA_MODULES="${GITHUB_WORKSPACE}" \
+              -DBUILD_VERSION="${BUILD_VERSION}"
+
+            actual="$(sha256sum "${build_dir}/zephyr/zmk.uf2" | awk '{print $1}')"
+            bytes="$(wc -c < "${build_dir}/zephyr/zmk.uf2")"
+            banner="$(strings "${build_dir}/zephyr/zmk.elf" | grep -F 'Booting Zephyr OS build' || true)"
+
+            echo "${name} SHA256: ${actual}"
+            echo "${name} bytes:  ${bytes}"
+            echo "${name} banner: ${banner}"
+            echo "${expected}  ${name}" >> /tmp/run200-artifacts/expected-sha256.txt
+            echo "${actual}  ${name}" >> /tmp/run200-artifacts/actual-sha256.txt
+
+            if [ "${actual}" != "${expected}" ]; then
+              echo "ERROR: ${name} does not match historical run #200" >&2
+              return 1
+            fi
+
+            cp "${build_dir}/zephyr/zmk.uf2" "/tmp/run200-artifacts/${name}.uf2"
+          }
+
+          build_and_verify \
+            settings_reset \
+            "settings_reset" \
+            "4076265ae4fe0941f27494846b43d6c55d0a34635e3dc99c86f6ff1e8b61545c"
+
+          build_and_verify \
+            dongle \
+            "eyelash_sofle_central_dongle dongle_display raw_hid_adapter" \
+            "9ce6d030e6fa51bda034c169ee03b15c440b0e2d29e901a8118ec2169219ce83"
+
+          build_and_verify \
+            left \
+            "eyelash_sofle_peripheral_left" \
+            "4c3629877a5a30a2c395f53f9b924ca26ea24289cf0b2f4a78559be139cfe1ec"
+
+          build_and_verify \
+            right \
+            "eyelash_sofle_peripheral_right" \
+            "381b604588ccd3b01e36ec4b95d966b7689b6d1b274e90ffaae06fda53ac6752"
+
+          echo "=== ALL FOUR RUN #200 UF2 FILES MATCH BIT-FOR-BIT ==="
+          cat /tmp/run200-artifacts/actual-sha256.txt
+
+      - name: Archive reconstructed UF2 files
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: forensic-run200-settings-reset
-          path: /tmp/run200-build/zephyr/zmk.uf2
+          name: forensic-run200-all-firmware
+          path: /tmp/run200-artifacts/
           retention-days: 30
