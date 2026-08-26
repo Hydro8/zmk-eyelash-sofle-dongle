@@ -128,12 +128,24 @@ jobs:
             name="$1"
             shield="$2"
             expected="$3"
-            build_dir="/tmp/run200-${name}"
+
+            if [ "${name}" = "dongle" ]; then
+              build_dir="${GITHUB_WORKSPACE}/build"
+              zmk_config="${GITHUB_WORKSPACE}/config"
+              echo "FORENSIC PATH TEST: dongle uses historical workspace paths"
+            else
+              build_dir="/tmp/run200-${name}"
+              zmk_config="/tmp/zmk-config/config"
+            fi
+
             evidence_dir="/tmp/run200-artifacts/${name}-build"
 
             echo "=== Building ${name} ==="
+            echo "build_dir=${build_dir}"
+            echo "ZMK_CONFIG=${zmk_config}"
+            echo "ZMK_EXTRA_MODULES=${GITHUB_WORKSPACE}"
             west build -s zmk/app -d "${build_dir}" -b "nice_nano@2" -- \
-              -DZMK_CONFIG=/tmp/zmk-config/config \
+              -DZMK_CONFIG="${zmk_config}" \
               -DSHIELD="${shield}" \
               -DZMK_EXTRA_MODULES="${GITHUB_WORKSPACE}" \
               -DBUILD_VERSION="${BUILD_VERSION}"
