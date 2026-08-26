@@ -64,6 +64,27 @@ manifest:
       revision: 1aa3950d6c86b4240b3f79d06bdbb04c5d920711
 
     # -------------------------------------------------------------------------
+    # Historical ZMK overrides — these projects must be defined before Zephyr
+    # and ZMK imports so West keeps the exact revisions used by build #200.
+    # -------------------------------------------------------------------------
+    - name: hal_stm32
+      remote: zmkfirmware
+      revision: 4fcc3a3f32abe1c4cb76d9d1cef967728dd03908
+      path: modules/hal/stm32
+      groups:
+        - hal
+
+    - name: lvgl
+      remote: zmkfirmware
+      revision: f1db87ee98f1810328a8419572fa42a3b5f352ae
+      path: modules/lib/gui/lvgl
+
+    - name: zmk-studio-messages
+      remote: zmkfirmware
+      revision: 6cb4c283e76209d59c45fbcb218800cd19e9339d
+      path: modules/msgs/zmk-studio-messages
+
+    # -------------------------------------------------------------------------
     # Zephyr RTOS — exact revision used by the historical reference build #200.
     # This top-level definition takes precedence over the floating Zephyr
     # revision imported later by ZMK's app/west.yml.
