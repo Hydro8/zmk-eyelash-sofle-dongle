@@ -64,6 +64,34 @@ manifest:
       revision: 1aa3950d6c86b4240b3f79d06bdbb04c5d920711
 
     # -------------------------------------------------------------------------
+    # Zephyr RTOS — exact revision used by the historical reference build #200.
+    # This top-level definition takes precedence over the floating Zephyr
+    # revision imported later by ZMK's app/west.yml.
+    # -------------------------------------------------------------------------
+    - name: zephyr
+      remote: zmkfirmware
+      revision: 9df4b12b5af3438a8b9d7a33780dc3b3b2f516c1
+      import:
+        name-blocklist:
+          - ci-tools
+          - hal_altera
+          - hal_cypress
+          - hal_infineon
+          - hal_microchip
+          - hal_nxp
+          - hal_openisa
+          - hal_xtensa
+          - hal_st
+          - hal_ti
+          - loramac-node
+          - mcuboot
+          - mcumgr
+          - net-tools
+          - openthread
+          - edtt
+          - trusted-firmware-m
+
+    # -------------------------------------------------------------------------
     # ZMK Firmware (core)
     # import: app/west.yml loads all ZMK sub-modules (drivers, behaviors, etc.)
     # Must be AFTER custom modules so CMake can find them via ZMK_EXTRA_MODULES.
