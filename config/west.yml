@@ -54,14 +54,14 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-config-selenium
       remote: keebs34
-      revision: main
+      revision: a3ec3d1f0bdd7d0bbd4df95b0517379ad3e336a6
 
     # -------------------------------------------------------------------------
     # Peripheral LED animation (Mario-style animation on the halves)
     # -------------------------------------------------------------------------
     - name: mario-peripheral-animation
       remote: gpeye
-      revision: main
+      revision: 1aa3950d6c86b4240b3f79d06bdbb04c5d920711
 
     # -------------------------------------------------------------------------
     # ZMK Firmware (core)
@@ -70,7 +70,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk
       remote: zmkfirmware
-      revision: main
+      revision: 1e7371f2654bed123727ec15adb42af344c1bb3d
       import: app/west.yml
 
     # -------------------------------------------------------------------------
@@ -79,7 +79,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-behavior-runtime-sensor-rotate
       remote: cormoran
-      revision: main
+      revision: 8b1125ed676c1f5e14145d217984f33d0ebdcef4
 
     # -------------------------------------------------------------------------
     # BLE device management (pairing/unpairing via ZMK Studio)
@@ -87,7 +87,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-module-ble-management
       remote: cormoran
-      revision: main
+      revision: 57738cc4fc6ba80e82a7ac57741a0339cb186cd4
 
     # -------------------------------------------------------------------------
     # Battery level history tracking (displayed in ZMK Studio)
@@ -95,7 +95,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-module-battery-history
       remote: cormoran
-      revision: main
+      revision: 307755dd2ad4d320e14de162e8e5ef018f29d929
 
     # -------------------------------------------------------------------------
     # Runtime input processor (configure key processing via ZMK Studio)
@@ -103,7 +103,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-module-runtime-input-processor
       remote: cormoran
-      revision: main
+      revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
 
     # -------------------------------------------------------------------------
     # Dongle OLED display (layer name, modifiers, battery, WPM, bongo cat)
@@ -112,7 +112,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-dongle-display
       remote: hydro8
-      revision: main
+      revision: 1e68660e534b2c8d5be008f0f6984cd595fbc827
 
     # -------------------------------------------------------------------------
     # Raw HID communication module (bidirectional 32-byte HID reports)
@@ -123,7 +123,7 @@ manifest:
     # -------------------------------------------------------------------------
     - name: zmk-raw-hid
       remote: zzeneg
-      revision: main
+      revision: e25e325adc90fccb60cc08393b8c2b0ba6d647c7
 
   # ==========================================================================
   # SELF (this repository)
