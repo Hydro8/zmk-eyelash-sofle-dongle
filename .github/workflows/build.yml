@@ -67,3 +67,62 @@ jobs:
           name: devicetree-debug
           path: build-dongle/zephyr/zephyr.dts.pre
           retention-days: 7
+
+  forensic-run200-settings-reset:
+    name: Forensic reconstruct run #200 settings_reset
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm@sha256:edb1c953438c6f720ddb79c3762f3972013b7fbbaf4fff3592fc869983e7afc5
+    steps:
+      - name: Checkout reference workspace
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 1
+
+      - name: Prepare isolated ZMK workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/zmk-config /tmp/run200-build
+          mkdir -p /tmp/zmk-config/config
+          cp -R config/* /tmp/zmk-config/config/
+          west init -l /tmp/zmk-config/config
+          cd /tmp/zmk-config
+          west update --fetch-opt=--filter=tree:0
+          west zephyr-export
+
+      - name: Verify historical revisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/zmk-config
+          test "$(git -C zephyr rev-parse HEAD)" = "9df4b12b5af3438a8b9d7a33780dc3b3b2f516c1"
+          test "$(git -C zmk rev-parse HEAD)" = "1e7371f2654bed123727ec15adb42af344c1bb3d"
+          echo "Zephyr: $(git -C zephyr rev-parse HEAD)"
+          echo "ZMK:    $(git -C zmk rev-parse HEAD)"
+          echo "git describe before override: $(git -C zephyr describe --abbrev=12 --always)"
+
+      - name: Build historical settings_reset
+        shell: bash
+        env:
+          BUILD_VERSION: 9df4b12b5af3
+        run: |
+          set -euo pipefail
+          cd /tmp/zmk-config
+          west build -s zmk/app -d /tmp/run200-build -b "nice_nano@2" -- \
+            -DZMK_CONFIG=/tmp/zmk-config/config \
+            -DSHIELD="settings_reset" \
+            -DZMK_EXTRA_MODULES="${GITHUB_WORKSPACE}" \
+            -DBUILD_VERSION="${BUILD_VERSION}"
+          echo "=== reconstructed SHA256 ==="
+          sha256sum /tmp/run200-build/zephyr/zmk.uf2
+          echo "=== embedded build banner ==="
+          strings /tmp/run200-build/zephyr/zmk.elf | grep -F "Booting Zephyr OS build" || true
+
+      - name: Archive reconstructed UF2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: forensic-run200-settings-reset
+          path: /tmp/run200-build/zephyr/zmk.uf2
+          retention-days: 30
