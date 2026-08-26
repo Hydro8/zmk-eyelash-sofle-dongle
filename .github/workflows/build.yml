@@ -114,6 +114,16 @@ jobs:
           cd /tmp/zmk-config
           mismatch=0
 
+          copy_if_exists() {
+            src="$1"
+            dst="$2"
+            if [ -f "${src}" ]; then
+              cp "${src}" "${dst}"
+            else
+              echo "INFO: optional forensic evidence missing: ${src}"
+            fi
+          }
+
           build_and_verify() {
             name="$1"
             shield="$2"
@@ -141,20 +151,20 @@ jobs:
             mkdir -p "${evidence_dir}"
             cp "${build_dir}/zephyr/zmk.uf2" "/tmp/run200-artifacts/${name}.uf2"
             cp "${build_dir}/zephyr/zmk.elf" "${evidence_dir}/zmk.elf"
-            cp "${build_dir}/zephyr/zephyr.map" "${evidence_dir}/zephyr.map"
-            cp "${build_dir}/zephyr/.config" "${evidence_dir}/.config"
-            cp "${build_dir}/zephyr/zephyr.dts" "${evidence_dir}/zephyr.dts"
-            cp "${build_dir}/zephyr/include/generated/zephyr/autoconf.h" "${evidence_dir}/autoconf.h"
-            cp "${build_dir}/build.ninja" "${evidence_dir}/build.ninja"
-            cp "${build_dir}/CMakeCache.txt" "${evidence_dir}/CMakeCache.txt"
-            if [ -f "${build_dir}/zephyr/zephyr.dts.pre" ]; then
-              cp "${build_dir}/zephyr/zephyr.dts.pre" "${evidence_dir}/zephyr.dts.pre"
-            fi
+            copy_if_exists "${build_dir}/zephyr/zephyr.map" "${evidence_dir}/zephyr.map"
+            copy_if_exists "${build_dir}/zephyr/.config" "${evidence_dir}/.config"
+            copy_if_exists "${build_dir}/zephyr/zephyr.dts" "${evidence_dir}/zephyr.dts"
+            copy_if_exists "${build_dir}/zephyr/include/generated/zephyr/autoconf.h" "${evidence_dir}/autoconf.h"
+            copy_if_exists "${build_dir}/build.ninja" "${evidence_dir}/build.ninja"
+            copy_if_exists "${build_dir}/CMakeCache.txt" "${evidence_dir}/CMakeCache.txt"
+            copy_if_exists "${build_dir}/zephyr/zephyr.dts.pre" "${evidence_dir}/zephyr.dts.pre"
             sha256sum "${evidence_dir}"/* > "${evidence_dir}/sha256.txt" || true
 
             if [ "${actual}" != "${expected}" ]; then
               echo "ERROR: ${name} does not match historical run #200" >&2
               mismatch=1
+            else
+              echo "MATCH: ${name} matches historical run #200 bit-for-bit"
             fi
           }
 
