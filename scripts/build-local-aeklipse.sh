@@ -15,21 +15,20 @@ fi
 west update
 west zephyr-export
 
-COMMON=(
-  -s zmk/app
-  -b 'nice_nano@2'
-  --pristine
-  --
-  "-DBOARD_ROOT=$ROOT"
-  "-DZMK_CONFIG=$ROOT/config"
-  "-DCMAKE_PREFIX_PATH=$ROOT/zephyr/share/zephyr-package"
-)
-
 build_target() {
   local name="$1"
   local shields="$2"
   echo "== BUILD $name =="
-  west build "${COMMON[@]}" -d "$ROOT/build/$name" "-DSHIELD=$shields"
+  west build \
+    -s zmk/app \
+    -b 'nice_nano@2' \
+    --pristine \
+    -d "$ROOT/build/$name" \
+    -- \
+    "-DBOARD_ROOT=$ROOT" \
+    "-DZMK_CONFIG=$ROOT/config" \
+    "-DCMAKE_PREFIX_PATH=$ROOT/zephyr/share/zephyr-package" \
+    "-DSHIELD=$shields"
 }
 
 build_target settings-reset 'settings_reset'
