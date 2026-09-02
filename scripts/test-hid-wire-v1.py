@@ -37,18 +37,21 @@ def parse(buf):
 
 
 def main():
-    vectors = []
-    vectors.append(frame(HELLO, 1, struct.pack("<I", 0x12345678)))
-    vectors.append(frame(GET_STATE, 2))
-    vectors.append(frame(SET_LAYER_INTENT, 3, bytes([8, 0])))
-    vectors.append(frame(SET_LAYER_INTENT, 4, bytes([10, 1])))
-    vectors.append(frame(ACK, 4, bytes([SET_LAYER_INTENT])))
-    vectors.append(frame(NACK, 5, bytes([SET_LAYER_INTENT, 4])))
+    vectors = [
+        (HELLO, 1, struct.pack("<I", 0x12345678)),
+        (GET_STATE, 2, b""),
+        (SET_LAYER_INTENT, 3, bytes([8, 0])),
+        (SET_LAYER_INTENT, 4, bytes([10, 1])),
+        (ACK, 4, bytes([SET_LAYER_INTENT])),
+        (NACK, 5, bytes([SET_LAYER_INTENT, 4])),
+    ]
 
-    for i, v in enumerate(vectors, 1):
+    for expected_type, expected_seq, expected_payload in vectors:
+        v = frame(expected_type, expected_seq, expected_payload)
         msg_type, seq, payload = parse(v)
-        assert seq == i if i <= 5 else 5
-        assert msg_type in {HELLO, GET_STATE, SET_LAYER_INTENT, ACK, NACK}
+        assert msg_type == expected_type
+        assert seq == expected_seq
+        assert payload == expected_payload
         assert len(v) == SIZE
         assert all(x == 0 for x in v[HEADER + len(payload):])
 
