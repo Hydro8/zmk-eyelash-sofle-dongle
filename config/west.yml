@@ -9,10 +9,14 @@
 # Each module is identified by:
 #   - name     : folder name created under /modules/ (e.g. zmk-raw-hid)
 #   - remote   : reference to one of the "remotes" defined below
-#   - revision : git branch or tag to checkout
+#   - revision : immutable git commit validated by the local four-target build
 #
 # IMPORTANT: "zmk" with "import: app/west.yml" must come AFTER the custom
 # modules so that CMake can find them when processing ZMK_EXTRA_MODULES.
+#
+# Æklipse P1 reproducibility baseline:
+# All direct dependencies that previously tracked `main` are pinned to the
+# exact revisions resolved by the successful local build on 2026-09-02.
 #
 
 manifest:
@@ -20,27 +24,16 @@ manifest:
   # REMOTES (git sources)
   # ==========================================================================
   remotes:
-    # Official ZMK firmware
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-
-    # Modules by cormoran (BLE management, battery history, input processor, sensor rotate)
     - name: cormoran
       url-base: https://github.com/cormoran
-
-    # LED animation on peripherals
     - name: gpeye
       url-base: https://github.com/GPeye
-
-    # OLED display widgets for the dongle
     - name: hydro8
       url-base: https://github.com/Hydro8
-
-    # Generic keymap configuration (home-row mods, combos, layout templates)
     - name: keebs34
       url-base: https://github.com/keebs34
-
-    # Bidirectional Raw HID communication (32-byte reports)
     - name: zzeneg
       url-base: https://github.com/zzeneg
 
@@ -48,88 +41,45 @@ manifest:
   # PROJECTS (modules)
   # ==========================================================================
   projects:
-    # -------------------------------------------------------------------------
-    # Keymap configuration module (home-row mods, combos, generic layouts)
-    # Provides: #include <selenium/selenium.keymap> and layout macros
-    # -------------------------------------------------------------------------
     - name: zmk-config-selenium
       remote: keebs34
-      revision: main
+      revision: a3ec3d1f0bdd7d0bbd4df95b0517379ad3e336a6
 
-    # -------------------------------------------------------------------------
-    # Peripheral LED animation (Mario-style animation on the halves)
-    # -------------------------------------------------------------------------
     - name: mario-peripheral-animation
       remote: gpeye
-      revision: main
+      revision: 1aa3950d6c86b4240b3f79d06bdbb04c5d920711
 
-    # -------------------------------------------------------------------------
-    # ZMK Firmware (core)
-    # import: app/west.yml loads all ZMK sub-modules (drivers, behaviors, etc.)
-    # Must be AFTER custom modules so CMake can find them via ZMK_EXTRA_MODULES.
-    # -------------------------------------------------------------------------
     - name: zmk
       remote: zmkfirmware
-      revision: main
+      revision: 641514a97db345f499dd50b0360e594270f008fe
       import: app/west.yml
 
-    # -------------------------------------------------------------------------
-    # Runtime pointing sensor rotation (via ZMK Studio BLE commands)
-    # Allows rotating the trackball/trackpoint orientation on the fly.
-    # -------------------------------------------------------------------------
     - name: zmk-behavior-runtime-sensor-rotate
       remote: cormoran
-      revision: main
+      revision: 8b1125ed676c1f5e14145d217984f33d0ebdcef4
 
-    # -------------------------------------------------------------------------
-    # BLE device management (pairing/unpairing via ZMK Studio)
-    # Allows managing BLE bonds remotely without physical buttons.
-    # -------------------------------------------------------------------------
     - name: zmk-module-ble-management
       remote: cormoran
-      revision: main
+      revision: 57738cc4fc6ba80e82a7ac57741a0339cb186cd4
 
-    # -------------------------------------------------------------------------
-    # Battery level history tracking (displayed in ZMK Studio)
-    # Records battery percentage over time for monitoring battery health.
-    # -------------------------------------------------------------------------
     - name: zmk-module-battery-history
       remote: cormoran
-      revision: main
+      revision: 307755dd2ad4d320e14de162e8e5ef018f29d929
 
-    # -------------------------------------------------------------------------
-    # Runtime input processor (configure key processing via ZMK Studio)
-    # Allows modifying how keypresses are processed without reflashing.
-    # -------------------------------------------------------------------------
     - name: zmk-module-runtime-input-processor
       remote: cormoran
-      revision: main
+      revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
 
-    # -------------------------------------------------------------------------
-    # Dongle OLED display (layer name, modifiers, battery, WPM, bongo cat)
-    # Contains: custom_status_screen.c, widget_*.c files
-    # Also contains: app_layer_sync.c and behavior_app_layer.c (Selenite module)
-    # -------------------------------------------------------------------------
     - name: zmk-dongle-display
       remote: hydro8
-      revision: main
+      revision: 1e68660e534b2c8d5be008f0f6984cd595fbc827
 
-    # -------------------------------------------------------------------------
-    # Raw HID communication module (bidirectional 32-byte HID reports)
-    # Used by app_layer_sync.c for:
-    #   - Receiving commands from Mac (target layer, auto/one-shot flags)
-    #   - Sending the active layer back to Mac (via raw_hid_send())
-    # Provides: raw_hid/events.h, raw_hid_send(), raw_hid_received_event
-    # -------------------------------------------------------------------------
     - name: zmk-raw-hid
       remote: zzeneg
-      revision: main
+      revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
 
   # ==========================================================================
   # SELF (this repository)
   # ==========================================================================
-  # path: config tells west that this repo IS the ZMK config directory.
-  # West expects to find here: *.conf, *.keymap, *.overlay, etc.
-  #
   self:
     path: config
