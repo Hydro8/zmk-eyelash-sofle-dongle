@@ -2,6 +2,7 @@
 
 Baseline auditée : `selenium@523bd65121277fe7503ca9f83efae7c6f91fd11e`  
 Branche de travail : `aeklipse/selenium-adoption-p1`  
+Baseline reproductible validée : `49070f9f340b2fb7a01fca504def647f58ed7865`  
 Date : 2026-09-02
 
 ## Architecture réellement observée
@@ -46,59 +47,80 @@ Risques techniques importants :
 3. `app_layer_sync.c` désactive l'ancien app layer avec le chemin de force actuel ; cette logique doit être revalidée contre l'invariant P0 « domaine Smart App isolé » pour ne jamais détruire une activation appartenant à un autre domaine ;
 4. `current_app_layer` et `active_app_layer` restent des indexes ZMK bruts ; un mapping stable est requis.
 
-Le mécanisme existant est donc précieux comme baseline matérielle réellement fonctionnelle, mais le protocole n'est pas encore conforme au contrat Æklipse v0-DRAFT.
+Le mécanisme existant est donc conservé comme baseline matérielle réellement fonctionnelle, mais le protocole n'est pas encore conforme au contrat Æklipse v0-DRAFT.
 
 ## Dépendances West / reproductibilité
 
-Toutes les dépendances custom observées dans `config/west.yml` utilisent encore `revision: main` :
+Les neuf dépendances directes auparavant mouvantes sur `main` ont été figées dans `config/west.yml` sur le set exact ayant passé deux fois les quatre builds locaux :
 
-- `keebs34/zmk-config-selenium` ;
-- `GPeye/mario-peripheral-animation` ;
-- `zmkfirmware/zmk` ;
-- `cormoran/zmk-behavior-runtime-sensor-rotate` ;
-- `cormoran/zmk-module-ble-management` ;
-- `cormoran/zmk-module-battery-history` ;
-- `cormoran/zmk-module-runtime-input-processor` ;
-- `Hydro8/zmk-dongle-display` ;
-- `zzeneg/zmk-raw-hid`.
+- `zmk-config-selenium`: `a3ec3d1f0bdd7d0bbd4df95b0517379ad3e336a6`
+- `mario-peripheral-animation`: `1aa3950d6c86b4240b3f79d06bdbb04c5d920711`
+- `zmk`: `641514a97db345f499dd50b0360e594270f008fe`
+- `zmk-behavior-runtime-sensor-rotate`: `8b1125ed676c1f5e14145d217984f33d0ebdcef4`
+- `zmk-module-ble-management`: `57738cc4fc6ba80e82a7ac57741a0339cb186cd4`
+- `zmk-module-battery-history`: `307755dd2ad4d320e14de162e8e5ef018f29d929`
+- `zmk-module-runtime-input-processor`: `43618985f8c9d5457cc333b7ca0733f2d361911e`
+- `zmk-dongle-display`: `1e68660e534b2c8d5be008f0f6984cd595fbc827`
+- `zmk-raw-hid`: `6a37765dfab6197292e7a9f47305dcf87386d56a`
 
-Cela rend une reconstruction future non déterministe. La priorité P1 est de capturer les commits exacts actuellement compatibles, puis de remplacer progressivement ces branches mouvantes par des SHAs immuables après build local des quatre targets.
-
-Premières révisions vérifiées au moment de l'audit :
-
-- `zmkfirmware/zmk`: `641514a97db345f499dd50b0360e594270f008fe` ;
-- `keebs34/zmk-config-selenium`: `a3ec3d1f0bdd7d0bbd4df95b0517379ad3e336a6` ;
-- `Hydro8/zmk-dongle-display`: `1e68660e534b2c8d5be008f0f6984cd595fbc827`.
-
-Ces SHAs sont documentés mais ne sont pas encore tous appliqués au manifest tant que le build local complet n'a pas validé l'ensemble cohérent des modules.
+Les dépendances transitives Zephyr restent déterminées par l'import du commit ZMK figé. Le build observé résout notamment Zephyr `v4.1.0+zmk-fixes` sur `10ba6d0cb38b...`.
 
 ## Build local hors GitHub Actions
 
 Le workflow historique `.github/workflows/build.yml` est conservé pour traçabilité, mais il n'est plus une preuve canonique Æklipse conformément à `DEC-20260902-007`.
 
-Le script `scripts/build-local-aeklipse.sh` reproduit localement le chemin principal du workflow existant : `west init -l config`, `west update`, puis builds des quatre entrées de `build.yaml` avec `BOARD_ROOT` et `ZMK_CONFIG` explicites.
+Le script `scripts/build-local-aeklipse.sh` exécute `west update` puis les quatre entrées de `build.yaml` avec `BOARD_ROOT` et `ZMK_CONFIG` explicites.
 
-La validation canonique future doit exécuter ce script dans une toolchain ZMK locale/container externe à GitHub Actions et archiver les commandes + HEADs effectivement utilisés.
+### Toolchain qualifiée le 2 septembre 2026
+
+- macOS Apple Silicon ;
+- Python `3.12.14` dans un environnement virtuel dédié ;
+- CMake `3.31.10` ;
+- West `1.5.0` ;
+- Zephyr SDK `0.17.0` ;
+- toolchain `arm-zephyr-eabi` GCC `12.2.0`.
+
+### Première preuve avant pinning
+
+Les quatre cibles ont compilé localement avec succès sur le set de HEADs ensuite figé.
+
+### Revalidation après pinning — PASS
+
+Commande canonique : `PATH="$VENV/bin:$PATH" bash scripts/build-local-aeklipse.sh`.
+
+HEAD firmware vérifié avant lancement : `49070f9f340b2fb7a01fca504def647f58ed7865`.
+
+Résultats :
+
+- `settings-reset` : PASS — Flash `43,752 B / 792 KB` (5.39 %), RAM `12,448 B / 256 KB` (4.75 %), UF2 `87,552 B` ;
+- `central-dongle` : PASS — Flash `410,148 B / 792 KB` (50.57 %), RAM `87,228 B / 256 KB` (33.27 %), UF2 `820,736 B` ;
+- `peripheral-left` : PASS — Flash `185,156 B / 792 KB` (22.83 %), RAM `37,848 B / 256 KB` (14.44 %), UF2 `370,688 B` ;
+- `peripheral-right` : PASS — Flash `184,712 B / 792 KB` (22.78 %), RAM `37,864 B / 256 KB` (14.44 %), UF2 `369,664 B`.
+
+Le script termine par `PASS: four Selenium targets built locally outside GitHub Actions`.
+
+Les warnings de compilation sont conservés comme dette technique, notamment `KSCAN` déprécié, options Studio inactives, vendor prefix `app`, plusieurs warnings de modules runtime et incompatibilités de type LVGL dans le display. Aucun n'empêche actuellement le link ni la génération UF2. Les warnings de bounds observés dans le target `settings-reset` doivent être traités comme risque de maintenance ZMK, mais ne sont pas une preuve d'un défaut produit des trois firmwares opérationnels.
 
 ## Nettoyage dépôt
 
-`.gitignore` ignore déjà `.DS_Store`, mais plusieurs fichiers `.DS_Store` sont suivis dans Git. Ils sont parasites et peuvent être retirés de la branche de modernisation sans effet fonctionnel. Aucun doublon de shield n'est supprimé à ce stade.
+`.gitignore` ignore déjà `.DS_Store`. Le `.DS_Store` racine suivi a été supprimé sur la branche de travail. D'autres artefacts historiques restent candidats à un nettoyage séparé. Aucun doublon de shield n'est supprimé à ce stade.
 
-## Risques classés
+## Risques classés après adoption
 
 ### P0
 
 - protocole Raw HID historique sans version/capabilities/session/validation robuste ;
 - index ZMK exposé directement au desktop au lieu d'un `layer_id` logique ;
-- état remonté réduit au highest layer, incompatible avec le snapshot multi-layer P0 ;
-- dépendances West mouvantes sur `main`.
+- état remonté réduit au highest layer, incompatible avec le snapshot multi-layer P0.
+
+Le risque P0 de dépendances West directes mouvantes est levé sur la branche d'adoption par le pinning validé.
 
 ### P1
 
-- build local des quatre targets à démontrer après pinning ;
 - ownership des layers Smart App à revalider dans `app_layer_sync.c` / `behavior_app_layer.c` ;
 - reconnexion/perte de session à formaliser ;
-- flash/RAM et stabilité BLE split à mesurer sur builds réels ;
+- stabilité BLE split à requalifier matériellement ;
+- warnings Kconfig/LVGL/ZMK à résorber sans changement de comportement ;
 - placeholders N0/N1 à remplacer par bindings produit validés.
 
 ### P2
@@ -109,18 +131,39 @@ La validation canonique future doit exécuter ce script dans une toolchain ZMK l
 
 ## Séquence minimale recommandée
 
-1. prouver le build local de la baseline inchangée ;
-2. capturer/pinner toutes les dépendances au set exact qui vient de passer ;
-3. ajouter framing/version/validation au Raw HID sans changer les comportements clavier ;
-4. introduire mapping `layer_id` logique ↔ index ZMK ;
-5. enrichir le state reporting vers active set + highest + Smart App selected ;
-6. seulement ensuite moderniser les Smart App Layers et l'overlay ;
-7. dédupliquer/nettoyer le dépôt dans des commits séparés de la logique.
+1. conserver `49070f9f...` comme baseline reproductible d'adoption ;
+2. ajouter framing/version/validation au Raw HID sans changer les comportements clavier ;
+3. introduire mapping `layer_id` logique ↔ index ZMK ;
+4. enrichir le state reporting vers active set + highest + Smart App selected ;
+5. revalider l'ownership Smart App Layers ;
+6. remplacer les placeholders applicatifs après validation produit ;
+7. traiter warnings et nettoyage dans des commits séparés de la logique ;
+8. exécuter ensuite les gates matériels BLE/reconnexion/batterie/flash réel.
+
+## Éléments conservés
+
+- architecture dongle central USB + deux périphériques BLE ;
+- boards/shields actifs `eyelash_sofle` ;
+- display et pointing existants ;
+- keymap Selenium réelle ;
+- Smart App Layers existants comme baseline comportementale ;
+- `zmk-dongle-display` et `zmk-raw-hid` comme point de départ ;
+- workflow GitHub historique uniquement pour traçabilité.
+
+## Éléments corrigés pendant l'adoption
+
+- procédure locale de build des quatre targets ;
+- correction du script de build pour positionner correctement le répertoire `west build` avant les arguments CMake ;
+- pinning des neuf dépendances West directes auparavant mouvantes ;
+- suppression sûre du `.DS_Store` racine ;
+- documentation d'audit et des gates.
 
 ## UNKNOWN / gates matériels
 
 - aucun flash matériel n'a été exécuté pendant cet audit ;
-- stabilité BLE des deux périphériques non requalifiée ici ;
+- stabilité BLE des deux périphériques non requalifiée matériellement ;
+- reconnexion/perte de session non requalifiée matériellement ;
 - consommation batterie non mesurée ;
-- flash/RAM non mesurés ;
-- compatibilité du set de HEADs `main` actuel après pinning complet doit être prouvée par build local avant modification fonctionnelle.
+- comportement Raw HID réel avec l'application macOS future non requalifié ici.
+
+Ces UNKNOWN ne bloquent pas l'adoption P1 de la baseline reproductible ; ils restent des gates des étapes d'intégration suivantes.
