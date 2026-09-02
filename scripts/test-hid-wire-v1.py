@@ -111,11 +111,12 @@ def main():
 
     malformed = bytearray(frame(GET_STATE, 9))
     malformed[31] = 1
+    rejected = False
     try:
         parse(bytes(malformed))
-        raise AssertionError("non-zero unused payload byte must fail")
     except AssertionError:
-        pass
+        rejected = True
+    assert rejected, "non-zero unused payload byte must fail"
 
     print("PASS: HID wire v1 vectors (12/12)")
 
