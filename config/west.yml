@@ -1,28 +1,11 @@
 # =============================================================================
 # WEST MANIFEST — Firmware Dependencies
 # =============================================================================
-#
-# This file lists all external modules required by the firmware.
-# West (Zephyr's build tool) clones them and places them in the correct
-# directory before compilation begins.
-#
-# Each module is identified by:
-#   - name     : folder name created under /modules/ (e.g. zmk-raw-hid)
-#   - remote   : reference to one of the "remotes" defined below
-#   - revision : immutable git commit validated by the local four-target build
-#
-# IMPORTANT: "zmk" with "import: app/west.yml" must come AFTER the custom
-# modules so that CMake can find them when processing ZMK_EXTRA_MODULES.
-#
-# Æklipse P1 reproducibility baseline:
-# All direct dependencies that previously tracked `main` are pinned to the
-# exact revisions resolved by the successful local build on 2026-09-02.
-#
+# Direct dependencies are pinned to immutable revisions. The only changed pin
+# versus the qualified Selenium adoption baseline is zmk-dongle-display, whose
+# dedicated Æklipse branch carries the HID wire v1 implementation.
 
 manifest:
-  # ==========================================================================
-  # REMOTES (git sources)
-  # ==========================================================================
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
@@ -37,49 +20,35 @@ manifest:
     - name: zzeneg
       url-base: https://github.com/zzeneg
 
-  # ==========================================================================
-  # PROJECTS (modules)
-  # ==========================================================================
   projects:
     - name: zmk-config-selenium
       remote: keebs34
       revision: a3ec3d1f0bdd7d0bbd4df95b0517379ad3e336a6
-
     - name: mario-peripheral-animation
       remote: gpeye
       revision: 1aa3950d6c86b4240b3f79d06bdbb04c5d920711
-
     - name: zmk
       remote: zmkfirmware
       revision: 641514a97db345f499dd50b0360e594270f008fe
       import: app/west.yml
-
     - name: zmk-behavior-runtime-sensor-rotate
       remote: cormoran
       revision: 8b1125ed676c1f5e14145d217984f33d0ebdcef4
-
     - name: zmk-module-ble-management
       remote: cormoran
       revision: 57738cc4fc6ba80e82a7ac57741a0339cb186cd4
-
     - name: zmk-module-battery-history
       remote: cormoran
       revision: 307755dd2ad4d320e14de162e8e5ef018f29d929
-
     - name: zmk-module-runtime-input-processor
       remote: cormoran
       revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
-
     - name: zmk-dongle-display
       remote: hydro8
-      revision: 1e68660e534b2c8d5be008f0f6984cd595fbc827
-
+      revision: 94203f8d6d80822ce366d681311645cbfdd16c2f
     - name: zmk-raw-hid
       remote: zzeneg
       revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
 
-  # ==========================================================================
-  # SELF (this repository)
-  # ==========================================================================
   self:
     path: config
