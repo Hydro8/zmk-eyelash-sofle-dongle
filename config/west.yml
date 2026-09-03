@@ -2,8 +2,8 @@
 # WEST MANIFEST — Firmware Dependencies
 # =============================================================================
 # Direct dependencies are pinned to immutable revisions. The only changed pin
-# versus the qualified Selenium adoption baseline is zmk-dongle-display, whose
-# dedicated Æklipse branch carries the HID wire v1 implementation.
+# versus the qualified HID wire v1 baseline is zmk-dongle-display, whose
+# dedicated Æklipse branch carries PHYSICAL_KEY_STATE support.
 
 manifest:
   remotes:
@@ -45,7 +45,7 @@ manifest:
       revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
     - name: zmk-dongle-display
       remote: hydro8
-      revision: 31ad285284b8f5ed9dc24b7bfd6c21bb252d174e
+      revision: a287cb265f409f4b11903b848f71c16815f48fc0
     - name: zmk-raw-hid
       remote: zzeneg
       revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
