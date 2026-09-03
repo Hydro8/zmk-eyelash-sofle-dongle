@@ -3,7 +3,7 @@
 # =============================================================================
 # Direct dependencies are pinned to immutable revisions. The only changed pin
 # versus the qualified HID wire v1 baseline is zmk-dongle-display, whose
-# dedicated Æklipse branch carries PHYSICAL_KEY_STATE support.
+# dedicated Æklipse branch carries PHYSICAL_KEY_STATE support and epoch recovery.
 
 manifest:
   remotes:
@@ -45,7 +45,7 @@ manifest:
       revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
     - name: zmk-dongle-display
       remote: hydro8
-      revision: a287cb265f409f4b11903b848f71c16815f48fc0
+      revision: d136104c42e19830757831ca45ac3d4cab730f7b
     - name: zmk-raw-hid
       remote: zzeneg
       revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
