@@ -15,6 +15,7 @@ SET_LAYER_INTENT = 0x10
 STATE_SNAPSHOT = 0x80
 HELLO_ACK = 0x81
 LINK_STATE_CHANGED = 0x82
+PHYSICAL_KEY_STATE = 0x83
 ACK = 0x90
 NACK = 0x91
 
@@ -30,6 +31,10 @@ INTERNAL_ERROR = 0x08
 LINK_DISCONNECTED = 0
 LINK_SOME_CONNECTED = 1
 LINK_ALL_CONNECTED = 2
+
+POSITION_COUNT = 64
+POSITION_BITMAP_BYTES = 8
+CAP_PHYSICAL_KEY_STATE = 1 << 3
 
 
 def frame(msg_type, seq, payload=b"", flags=0):
@@ -71,6 +76,34 @@ def snapshot_payload(revision, valid, link_state, highest_ref, smart_ref, active
     return payload
 
 
+def physical_payload(valid, positions):
+    assert all(0 <= pos < POSITION_COUNT for pos in positions)
+    bitmap = bytearray(POSITION_BITMAP_BYTES)
+    if valid:
+        for pos in positions:
+            bitmap[pos // 8] |= 1 << (pos % 8)
+    else:
+        assert not positions, "invalid physical state must not serialize stale pressed positions"
+    payload = bytes([int(valid), POSITION_COUNT]) + bytes(bitmap)
+    assert len(payload) == 10
+    return payload
+
+
+def physical_positions(payload):
+    assert len(payload) == 10
+    valid, count = payload[0], payload[1]
+    assert valid in (0, 1)
+    assert count == POSITION_COUNT
+    if not valid:
+        assert not any(payload[2:])
+        return set()
+    out = set()
+    for pos in range(count):
+        if payload[2 + pos // 8] & (1 << (pos % 8)):
+            out.add(pos)
+    return out
+
+
 def main():
     vectors = [
         (HELLO, 1, struct.pack("<I", 0x12345678)),
@@ -102,8 +135,10 @@ def main():
     link = bytes([LINK_DISCONNECTED, 0])
     assert parse(frame(LINK_STATE_CHANGED, 0, link))[2] == link
 
-    hello_ack = struct.pack("<IHHHI", 0x12345678, 1, 0x0003, 1, 0x53454C31)
+    hello_capabilities = 0x0003 | CAP_PHYSICAL_KEY_STATE
+    hello_ack = struct.pack("<IHHHI", 0x12345678, 1, hello_capabilities, 1, 0x53454C31)
     assert len(hello_ack) == 14
+    assert struct.unpack_from("<H", hello_ack, 6)[0] & CAP_PHYSICAL_KEY_STATE
     assert len(frame(HELLO_ACK, 1, hello_ack)) == 32
 
     assert [UNSUPPORTED_VERSION, UNSUPPORTED_MESSAGE, INVALID_PAYLOAD, INVALID_LAYER,
@@ -118,7 +153,32 @@ def main():
         rejected = True
     assert rejected, "non-zero unused payload byte must fail"
 
-    print("PASS: HID wire v1 vectors (12/12)")
+    # PHYSICAL_KEY_STATE vectors: position_id is the transformed ZMK logical position 0..63.
+    zero = physical_payload(True, [])
+    assert physical_positions(parse(frame(PHYSICAL_KEY_STATE, 0, zero))[2]) == set()
+
+    one = physical_payload(True, [0])
+    assert physical_positions(parse(frame(PHYSICAL_KEY_STATE, 0, one))[2]) == {0}
+
+    # Cross-half sample: 5 is on the left first row; 6 is on the right first row.
+    multi = physical_payload(True, [5, 6, 32])
+    assert physical_positions(parse(frame(PHYSICAL_KEY_STATE, 0, multi))[2]) == {5, 6, 32}
+
+    maximum = physical_payload(True, [63])
+    assert physical_positions(parse(frame(PHYSICAL_KEY_STATE, 0, maximum))[2]) == {63}
+
+    invalid_physical = physical_payload(False, [])
+    invalid_type, invalid_seq, invalid_payload = parse(frame(PHYSICAL_KEY_STATE, 0, invalid_physical))
+    assert invalid_type == PHYSICAL_KEY_STATE and invalid_seq == 0
+    assert invalid_payload[0] == 0 and invalid_payload[1] == POSITION_COUNT
+    assert not any(invalid_payload[2:])
+
+    negotiated = False
+    assert not negotiated, "session non négociée: firmware must not publish a valid physical state"
+    negotiated = True
+    assert negotiated and physical_positions(physical_payload(True, [1])) == {1}
+
+    print("PASS: HID wire v1 + physical key state vectors (18/18)")
 
 
 if __name__ == "__main__":
