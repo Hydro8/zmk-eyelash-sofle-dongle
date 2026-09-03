@@ -68,17 +68,54 @@ Rules:
 - after a split-link uncertainty the implementation stays fail-closed instead of claiming a reconstructed bitmap without proof;
 - USB session loss alone does not fabricate or remap position identity.
 
-## Test vectors
+## Qualification locale du 3 septembre 2026 — PASS
 
-Host vectors cover:
+Qualification exécutée sur :
 
-- zero pressed positions;
-- one pressed position;
-- multiple simultaneous positions crossing left/right domains;
-- maximum position 63;
-- invalid state with zero bitmap;
-- session non-negotiated gate;
-- existing v1 malformed-padding rejection.
+- firmware `aeklipse/physical-key-state-p2@05d26035895a8465eff7a119a4a4981d0d2c0cc7` ;
+- module `Hydro8/zmk-dongle-display@a287cb265f409f4b11903b848f71c16815f48fc0` ;
+- Python `3.12.14` ;
+- CMake `3.31.10` ;
+- West `1.5.0` ;
+- Zephyr `4.1.0` commit `10ba6d0cb38b...` ;
+- Zephyr SDK `0.17.0` / GCC `12.2.0`.
+
+### Vecteurs HID
+
+`scripts/test-hid-wire-v1.py` :
+
+`PASS: HID wire v1 + physical key state vectors (18/18)`
+
+Les vecteurs couvrent notamment zéro touche, une touche, multi-touch gauche/droite, position 63, état invalide à bitmap nul, gate session non négociée et validation du framing existant.
+
+### Quatre builds Selenium
+
+`scripts/build-local-aeklipse.sh` :
+
+- `settings-reset` : PASS — Flash `43,752 B / 792 KB` (5.39 %), RAM `12,448 B / 256 KB` (4.75 %), UF2 `87,552 B` ;
+- `central-dongle` : PASS — Flash `411,828 B / 792 KB` (50.78 %), RAM `87,300 B / 256 KB` (33.30 %), UF2 `823,808 B` ;
+- `peripheral-left` : PASS — Flash `185,156 B / 792 KB` (22.83 %), RAM `37,848 B / 256 KB` (14.44 %), UF2 `370,688 B` ;
+- `peripheral-right` : PASS — Flash `184,712 B / 792 KB` (22.78 %), RAM `37,864 B / 256 KB` (14.44 %), UF2 `369,664 B`.
+
+Le script termine par :
+
+`PASS: four Selenium targets built locally outside GitHub Actions`
+
+Les warnings observés restent non bloquants et préexistants ou indépendants du nouveau protocole : `KSCAN` déprécié, vendor prefix `app`, options Studio inactives, warnings de modules runtime, incompatibilités LVGL de type, et warnings particuliers du target `settings-reset`. Aucun warning n'empêche le link ni la génération UF2. Aucun GitHub Actions n'a été utilisé comme preuve canonique.
+
+## Résultat J3
+
+Le gate firmware J3 est **PASS** :
+
+- identité `position_id` prouvée ;
+- cardinalité 64 prouvée ;
+- sérialisation bitmap 8 octets implémentée ;
+- multi-touch couvert ;
+- invalidation fail-closed couverte ;
+- vecteurs 18/18 PASS ;
+- quatre targets Selenium PASS hors GitHub Actions.
+
+La qualification physique réelle Mac ↔ dongle ↔ BLE n'est pas incluse dans ce gate firmware.
 
 ## Remaining UNKNOWN / later physical qualification
 
