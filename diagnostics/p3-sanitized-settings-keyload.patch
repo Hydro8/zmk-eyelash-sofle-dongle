@@ -1,0 +1,113 @@
+--- a/subsys/bluetooth/host/keys.c
++++ b/subsys/bluetooth/host/keys.c
+@@ -36,6 +36,21 @@
+ 
+ static struct bt_keys key_pool[CONFIG_BT_MAX_PAIRED];
+ 
++static uint32_t p3set_load_seq;
++
++static size_t p3set_pool_entries(void)
++{
++	size_t count = 0;
++
++	for (size_t i = 0; i < ARRAY_SIZE(key_pool); i++) {
++		if (key_pool[i].keys != 0U) {
++			count++;
++		}
++	}
++
++	return count;
++}
++
+ #define BT_KEYS_STORAGE_LEN_COMPAT (BT_KEYS_STORAGE_LEN - sizeof(uint32_t))
+ 
+ #if defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
+@@ -82,6 +97,7 @@
+ 
+ void bt_keys_reset(void)
+ {
++	LOG_INF("P3SET reset pool_entries_before=%zu", p3set_pool_entries());
+ 	memset(key_pool, 0, sizeof(key_pool));
+ }
+ 
+@@ -356,14 +372,21 @@
+ 	int err;
+ 	char val[BT_KEYS_STORAGE_LEN];
+ 	const char *next;
++	uint32_t p3set_seq = ++p3set_load_seq;
+ 
++	LOG_INF("P3SET load seq=%u presented=%u announced_len=%zu",
++		p3set_seq, name != NULL, len_rd);
++
+ 	if (!name) {
++		LOG_INF("P3SET load seq=%u accepted=0 reason=no_name", p3set_seq);
+ 		LOG_ERR("Insufficient number of arguments");
+ 		return -EINVAL;
+ 	}
+ 
+ 	len = read_cb(cb_arg, val, sizeof(val));
++	LOG_INF("P3SET load seq=%u read_rc=%zd", p3set_seq, len);
+ 	if (len < 0) {
++		LOG_INF("P3SET load seq=%u accepted=0 reason=read", p3set_seq);
+ 		LOG_ERR("Failed to read value (err %zd)", len);
+ 		return -EINVAL;
+ 	}
+@@ -372,6 +395,7 @@
+ 
+ 	err = bt_settings_decode_key(name, &addr);
+ 	if (err) {
++		LOG_INF("P3SET load seq=%u accepted=0 reason=decode", p3set_seq);
+ 		LOG_ERR("Unable to decode address %s", name);
+ 		return -EINVAL;
+ 	}
+@@ -384,6 +408,7 @@
+ 		unsigned long next_id = strtoul(next, NULL, 10);
+ 
+ 		if (next_id >= CONFIG_BT_ID_MAX) {
++			LOG_INF("P3SET load seq=%u accepted=0 reason=id", p3set_seq);
+ 			LOG_ERR("Invalid local identity %lu", next_id);
+ 			return -EINVAL;
+ 		}
+@@ -400,11 +425,15 @@
+ 			LOG_WRN("Unable to find deleted keys for %s", bt_addr_le_str(&addr));
+ 		}
+ 
++		LOG_INF("P3SET load seq=%u accepted=1 deleted=1 id=%u pool_entries=%zu",
++			p3set_seq, id, p3set_pool_entries());
+ 		return 0;
+ 	}
+ 
+ 	keys = bt_keys_get_addr(id, &addr);
+ 	if (!keys) {
++		LOG_INF("P3SET load seq=%u accepted=0 reason=alloc id=%u",
++			p3set_seq, id);
+ 		LOG_ERR("Failed to allocate keys for %s", bt_addr_le_str(&addr));
+ 		return -ENOMEM;
+ 	}
+@@ -417,6 +446,8 @@
+ 			LOG_WRN("Keys for %s have no aging counter", bt_addr_le_str(&addr));
+ 			memcpy(keys->storage_start, val, len);
+ 		} else {
++			LOG_INF("P3SET load seq=%u accepted=0 reason=length id=%u read_len=%zd expected_len=%zu",
++				p3set_seq, id, len, BT_KEYS_STORAGE_LEN);
+ 			LOG_ERR("Invalid key length %zd != %zu", len, BT_KEYS_STORAGE_LEN);
+ 			bt_keys_clear(keys);
+ 
+@@ -426,6 +457,8 @@
+ 		memcpy(keys->storage_start, val, len);
+ 	}
+ 
++	LOG_INF("P3SET load seq=%u accepted=1 id=%u types=0x%04x read_len=%zd pool_entries=%zu",
++		p3set_seq, id, keys->keys, len, p3set_pool_entries());
+ 	LOG_DBG("Successfully restored keys for %s", bt_addr_le_str(&addr));
+ #if defined(CONFIG_BT_KEYS_OVERWRITE_OLDEST)
+ 	if (aging_counter_val < keys->aging_counter) {
+@@ -454,6 +487,8 @@
+ 		bt_keys_foreach_type(BT_KEYS_IRK, id_add, NULL);
+ 	}
+ 
++	LOG_INF("P3SET commit pool_entries=%zu", p3set_pool_entries());
++
+ 	return 0;
+ }
+ 
