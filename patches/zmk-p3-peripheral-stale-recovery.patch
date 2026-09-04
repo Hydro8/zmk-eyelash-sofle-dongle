@@ -9,17 +9,16 @@ index fd6c22f..3f1227a 100644
 +void zmk_split_bt_peripheral_request_recovery(void);
  struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void);
 diff --git a/app/src/split/bluetooth/peripheral.c b/app/src/split/bluetooth/peripheral.c
-index 0d3ad2d..cd4be2e 100644
+index 0d3ad2d..8f0f3b5 100644
 --- a/app/src/split/bluetooth/peripheral.c
 +++ b/app/src/split/bluetooth/peripheral.c
-@@ -60,6 +60,8 @@ static bool low_duty_advertising = false;
+@@ -60,6 +60,7 @@ static bool low_duty_advertising = false;
  static bool enabled = false;
 +static bool recovery_in_progress = false;
-+
  
  static void advertising_cb(struct k_work *work) {
      const int err = start_advertising(low_duty_advertising);
-@@ -71,6 +73,39 @@ static void advertising_cb(struct k_work *work) {
+@@ -71,6 +72,34 @@ static void advertising_cb(struct k_work *work) {
  
  K_WORK_DEFINE(advertising_work, advertising_cb);
  
@@ -48,11 +47,7 @@ index 0d3ad2d..cd4be2e 100644
 +    }
 +
 +    low_duty_advertising = false;
-+    int err = bt_le_adv_start(BT_LE_ADV_CONN_DIR_LOW_DUTY(BT_ADDR_LE_NONE), NULL, 0, NULL, 0);
-+    if (err == 0) {
-+        bt_le_adv_stop();
-+    }
-+
++    LOG_WRN("P3 recovery: restarting directed advertising");
 +    k_work_submit(&advertising_work);
 +}
 +
@@ -66,7 +61,7 @@ index 0d3ad2d..cd4be2e 100644
  
      raise_zmk_split_peripheral_status_changed(
          (struct zmk_split_peripheral_status_changed){.connected = is_connected});
-@@ -96,6 +131,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
+@@ -96,6 +125,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
      LOG_DBG("Disconnected from %s (reason 0x%02x)", addr, reason);
  
      is_connected = false;
@@ -74,7 +69,7 @@ index 0d3ad2d..cd4be2e 100644
  
      raise_zmk_split_peripheral_status_changed(
          (struct zmk_split_peripheral_status_changed){.connected = is_connected});
-@@ -137,6 +173,15 @@ struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void) {
+@@ -137,6 +167,15 @@ struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void) {
      return &bt_peripheral;
  }
  
