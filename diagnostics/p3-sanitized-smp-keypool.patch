@@ -2,7 +2,7 @@ diff --git a/subsys/bluetooth/host/smp.c b/subsys/bluetooth/host/smp.c
 index 45fb4fe73..000000000 100644
 --- a/subsys/bluetooth/host/smp.c
 +++ b/subsys/bluetooth/host/smp.c
-@@ -378,8 +378,35 @@ static uint8_t legacy_get_pair_method(struct bt_smp *smp, uint8_t remote_io);
+@@ -378,7 +378,36 @@ static uint8_t legacy_get_pair_method(struct bt_smp *smp, uint8_t remote_io);
  #endif
  
 +struct p3_keypool_diag_ctx {
