@@ -1,0 +1,113 @@
+diff --git a/app/src/split/bluetooth/peripheral.h b/app/src/split/bluetooth/peripheral.h
+index fd6c22f..3f1227a 100644
+--- a/app/src/split/bluetooth/peripheral.h
++++ b/app/src/split/bluetooth/peripheral.h
+@@ -8,4 +8,5 @@
+ #include <zmk/split/transport/types.h>
+ #include <zmk/split/transport/peripheral.h>
+ 
++void zmk_split_bt_peripheral_request_recovery(void);
+ struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void);
+diff --git a/app/src/split/bluetooth/peripheral.c b/app/src/split/bluetooth/peripheral.c
+index 0d3ad2d..cd4be2e 100644
+--- a/app/src/split/bluetooth/peripheral.c
++++ b/app/src/split/bluetooth/peripheral.c
+@@ -60,6 +60,8 @@ static bool low_duty_advertising = false;
+ static bool enabled = false;
++static bool recovery_in_progress = false;
++
+ 
+ static void advertising_cb(struct k_work *work) {
+     const int err = start_advertising(low_duty_advertising);
+@@ -71,6 +73,39 @@ static void advertising_cb(struct k_work *work) {
+ 
+ K_WORK_DEFINE(advertising_work, advertising_cb);
+ 
++static void find_first_conn(struct bt_conn *conn, void *data);
++
++static void recovery_work_cb(struct k_work *work) {
++    if (!enabled) {
++        recovery_in_progress = false;
++        return;
++    }
++
++    struct bt_conn *conn = NULL;
++    bt_conn_foreach(BT_CONN_TYPE_LE, find_first_conn, &conn);
++
++    if (conn) {
++        int err = bt_conn_disconnect(conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
++        if (err == 0) {
++            LOG_WRN("P3 recovery: disconnecting stale split connection");
++            return;
++        }
++        if (err != -ENOTCONN) {
++            LOG_WRN("P3 recovery: stale disconnect failed (%d)", err);
++            recovery_in_progress = false;
++            return;
++        }
++    }
++
++    low_duty_advertising = false;
++    int err = bt_le_adv_start(BT_LE_ADV_CONN_DIR_LOW_DUTY(BT_ADDR_LE_NONE), NULL, 0, NULL, 0);
++    if (err == 0) {
++        bt_le_adv_stop();
++    }
++
++    k_work_submit(&advertising_work);
++}
++
++K_WORK_DEFINE(recovery_work, recovery_work_cb);
++
+ static void connected(struct bt_conn *conn, uint8_t err) {
+     is_connected = (err == 0);
++    if (is_connected) {
++        recovery_in_progress = false;
++    }
+ 
+     raise_zmk_split_peripheral_status_changed(
+         (struct zmk_split_peripheral_status_changed){.connected = is_connected});
+@@ -96,6 +131,7 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
+     LOG_DBG("Disconnected from %s (reason 0x%02x)", addr, reason);
+ 
+     is_connected = false;
++    recovery_in_progress = false;
+ 
+     raise_zmk_split_peripheral_status_changed(
+         (struct zmk_split_peripheral_status_changed){.connected = is_connected});
+@@ -137,6 +173,15 @@ struct zmk_split_transport_peripheral *zmk_split_transport_peripheral_bt(void) {
+     return &bt_peripheral;
+ }
+ 
++void zmk_split_bt_peripheral_request_recovery(void) {
++    if (!enabled || recovery_in_progress) {
++        return;
++    }
++
++    recovery_in_progress = true;
++    k_work_submit(&recovery_work);
++}
++
+ static void notify_transport_status(void) {
+     if (transport_status_cb) {
+         transport_status_cb(&bt_peripheral, split_peripheral_bt_get_status());
+diff --git a/app/src/split/bluetooth/service.c b/app/src/split/bluetooth/service.c
+index 5bbed13..e2a3ae1 100644
+--- a/app/src/split/bluetooth/service.c
++++ b/app/src/split/bluetooth/service.c
+@@ -5,6 +5,7 @@
+  */
+ 
++#include <errno.h>
+ #include <zephyr/drivers/sensor.h>
+ #include <zephyr/types.h>
+ #include <zephyr/sys/util.h>
+@@ -225,6 +226,9 @@ void send_position_state_callback(struct k_work *work) {
+         int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));
+         if (err) {
+             LOG_DBG("Error notifying %d", err);
++            if (err == -ENOTCONN) {
++                zmk_split_bt_peripheral_request_recovery();
++            }
+         }
+     }
+ };
