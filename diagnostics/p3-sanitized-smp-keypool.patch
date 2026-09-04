@@ -1,0 +1,41 @@
+diff --git a/subsys/bluetooth/host/smp.c b/subsys/bluetooth/host/smp.c
+index 45fb4fe73..000000000 100644
+--- a/subsys/bluetooth/host/smp.c
++++ b/subsys/bluetooth/host/smp.c
+@@ -378,8 +378,35 @@ static uint8_t legacy_get_pair_method(struct bt_smp *smp, uint8_t remote_io);
+ #endif
+ 
++struct p3_keypool_diag_ctx {
++	struct bt_conn *conn;
++	uint8_t entry;
++};
++
++static void p3_keypool_diag_entry(struct bt_keys *keys, void *data)
++{
++	struct p3_keypool_diag_ctx *ctx = data;
++	bool dst_match = keys->id == ctx->conn->id &&
++			 bt_addr_le_eq(&keys->addr, &ctx->conn->le.dst);
++
++	LOG_INF("P3KEY entry=%u id=%u types=0x%04x dst_match=%u",
++		ctx->entry++, keys->id, keys->keys, dst_match);
++}
++
+ static bool smp_keys_check(struct bt_conn *conn)
+ {
++	struct p3_keypool_diag_ctx diag = {
++		.conn = conn,
++		.entry = 0,
++	};
++	struct bt_keys *diag_p256;
++	struct bt_keys *diag_ltk;
++
++	bt_keys_foreach_type(BT_KEYS_ALL, p3_keypool_diag_entry, &diag);
++	diag_p256 = bt_keys_find(BT_KEYS_LTK_P256, conn->id, &conn->le.dst);
++	diag_ltk = bt_keys_find(BT_KEYS_LTK, conn->id, &conn->le.dst);
++	LOG_INF("P3KEY conn_id=%u pool_entries=%u cached=%u lookup_p256=%u lookup_ltk=%u",
++		conn->id, diag.entry, conn->le.keys != NULL,
++		diag_p256 != NULL, diag_ltk != NULL);
++
+ 	if (atomic_test_bit(conn->flags, BT_CONN_FORCE_PAIR)) {
+ 		return false;
+ 	}
