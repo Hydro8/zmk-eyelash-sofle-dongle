@@ -36,8 +36,9 @@ def replace_once(path: Path, old: str, new: str) -> None:
     text = path.read_text()
     if new in text:
         return
-    if text.count(old) != 1:
-        raise SystemExit(f"ERROR: expected exactly one source anchor in {path}, got {text.count(old)}")
+    count = text.count(old)
+    if count != 1:
+        raise SystemExit(f"ERROR: expected exactly one source anchor in {path}, got {count}")
     path.write_text(text.replace(old, new, 1))
 
 header = root / "app/src/split/bluetooth/peripheral.h"
@@ -82,8 +83,8 @@ replace_once(
 )
 replace_once(
     service,
-    '''        if (err) {\n            LOG_DBG("Error notifying %d", err);\n        }''',
-    '''        if (err) {\n            LOG_DBG("Error notifying %d", err);\n            if (err == -ENOTCONN) {\n                zmk_split_bt_peripheral_request_recovery();\n            }\n        }''',
+    '''        int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n        if (err) {\n            LOG_DBG("Error notifying %d", err);\n        }''',
+    '''        int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n        if (err) {\n            LOG_DBG("Error notifying %d", err);\n            if (err == -ENOTCONN) {\n                zmk_split_bt_peripheral_request_recovery();\n            }\n        }''',
 )
 
 print("P3 recovery candidate source edits applied")
