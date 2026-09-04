@@ -11,6 +11,9 @@ case "$SIDE" in
   *) echo "Usage: $0 [left|right]" >&2; exit 2 ;;
 esac
 
+# Start from the clean pinned ZMK baseline and apply/build the proven v3 source shape.
+# v4 then changes only the recovery-success criterion: BLE connected() is not enough;
+# the guard is released only after a successful split position notification.
 bash "$ROOT/scripts/build-p3-peripheral-recovery-candidate-v3.sh" "$SIDE"
 
 python3 - "$ROOT/zmk" <<'PY'
@@ -45,8 +48,8 @@ peripheral.write_text(text[:idx] + mark_fn + text[idx:])
 
 service = root / "app/src/split/bluetooth/service.c"
 replace_once(service,
-    '''    int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n    if (err) {''',
-    '''    int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n    if (!err) {\n        zmk_split_bt_peripheral_mark_transport_ready();\n    }\n    if (err) {''')
+    '''        int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n        if (err) {\n            LOG_DBG("Error notifying %d", err);\n            if (err == -ENOTCONN) {\n                zmk_split_bt_peripheral_request_recovery();\n            }\n        }''',
+    '''        int err = bt_gatt_notify(NULL, &split_svc.attrs[1], &state, sizeof(state));\n        if (!err) {\n            zmk_split_bt_peripheral_mark_transport_ready();\n        }\n        if (err) {\n            LOG_DBG("Error notifying %d", err);\n            if (err == -ENOTCONN) {\n                zmk_split_bt_peripheral_request_recovery();\n            }\n        }''')
 print("P3 recovery candidate v4 source edits applied")
 PY
 
