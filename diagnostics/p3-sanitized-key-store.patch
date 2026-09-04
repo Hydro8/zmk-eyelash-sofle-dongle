@@ -1,0 +1,27 @@
+--- a/subsys/bluetooth/host/keys.c
++++ b/subsys/bluetooth/host/keys.c
+@@ -313,6 +313,8 @@
+ {
+ 	__ASSERT_NO_MSG(keys != NULL);
+ 
++	LOG_INF("P3STORE clear id=%u types=0x%04x",
++		keys->id, keys->keys);
+ 	LOG_DBG("%s (keys 0x%04x)", bt_addr_le_str(&keys->addr), keys->keys);
+ 
+ 	if (keys->state & BT_KEYS_ID_ADDED) {
+@@ -334,8 +336,15 @@
+ 
+ 	__ASSERT_NO_MSG(keys != NULL);
+ 
++	LOG_INF("P3STORE save_begin id=%u types=0x%04x len=%zu",
++		keys->id, keys->keys, (size_t)BT_KEYS_STORAGE_LEN);
++
+ 	err = bt_settings_store_keys(keys->id, &keys->addr, keys->storage_start,
+ 				     BT_KEYS_STORAGE_LEN);
++
++	LOG_INF("P3STORE save_end id=%u rc=%d",
++		keys->id, err);
++
+ 	if (err) {
+ 		LOG_ERR("Failed to save keys (err %d)", err);
+ 		return err;
