@@ -32,6 +32,7 @@ west build \
   "-DZMK_CONFIG=$ROOT/config" \
   "-DCMAKE_PREFIX_PATH=$ROOT/zephyr/share/zephyr-package" \
   "-DSHIELD=$SHIELD" \
+  "-DSNIPPET=zmk-usb-logging" \
   "-DEXTRA_CONF_FILE=$ROOT/config/p3-peripheral-debug.conf"
 
 echo "PASS: P3 peripheral ${SIDE} diagnostic firmware built"
