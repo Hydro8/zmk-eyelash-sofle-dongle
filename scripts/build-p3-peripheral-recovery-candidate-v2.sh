@@ -22,6 +22,14 @@ fi
 west update
 west zephyr-export
 
+# Candidate builds must always start from the exact pinned ZMK source, not
+# from edits left in the west workspace by an earlier diagnostic candidate.
+ZMK_PIN="641514a97db345f499dd50b0360e594270f008fe"
+git -C "$ROOT/zmk" reset --hard "$ZMK_PIN"
+git -C "$ROOT/zmk" diff --quiet
+test "$(git -C "$ROOT/zmk" rev-parse HEAD)" = "$ZMK_PIN"
+echo "ZMK clean pinned baseline: $ZMK_PIN"
+
 # Candidate v2: on a demonstrated -ENOTCONN from split position notification,
 # request a clean disconnect first. If the normal disconnected/recycled path
 # never completes, use one bounded delayed fallback to restart directed
