@@ -45,7 +45,7 @@ manifest:
       revision: 43618985f8c9d5457cc333b7ca0733f2d361911e
     - name: zmk-dongle-display
       remote: hydro8
-      revision: d136104c42e19830757831ca45ac3d4cab730f7b
+      revision: d19e52691531f59428199e47d759292dadc45fc9
     - name: zmk-raw-hid
       remote: zzeneg
       revision: 6a37765dfab6197292e7a9f47305dcf87386d56a
